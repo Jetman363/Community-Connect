@@ -1,0 +1,3 @@
+CREATE DATABASE integration_db;
+CREATE DATABASE alert_db;
+CREATE DATABASE cad_db;

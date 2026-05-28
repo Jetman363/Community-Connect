@@ -1,0 +1,298 @@
+@import "tailwindcss";
+
+@theme {
+  --color-tactical-bg: #0c0c0e;
+  --color-tactical-panel: #141418;
+  --color-tactical-surface: #1a1a20;
+  --color-tactical-border: #2a2a32;
+  --color-tactical-silver: #c0c0c8;
+  --color-tactical-accent: #3b82f6;
+  --color-tactical-danger: #ef4444;
+  --color-tactical-warning: #f59e0b;
+  --color-tactical-success: #22c55e;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html { @apply antialiased; }
+  body { @apply bg-[#0c0c0e] text-slate-200 font-sans; }
+}
+
+/* MDT terminal color schemes (toggled under Unit Status) */
+[data-mdt-theme="dark"] {
+  --mdt-bg: #0c0c0e;
+  --mdt-panel: #141418;
+  --mdt-surface: #1a1a20;
+  --mdt-surface-alt: #121218;
+  --mdt-border: #2a2a32;
+  --mdt-input: #0c0c0e;
+  --mdt-hover: #1a1a20;
+  --mdt-text: #e2e8f0;
+  --mdt-text-muted: #94a3b8;
+}
+
+[data-mdt-theme="light"] {
+  --mdt-bg: #f1f5f9;
+  --mdt-panel: #ffffff;
+  --mdt-surface: #f8fafc;
+  --mdt-surface-alt: #f1f5f9;
+  --mdt-border: #cbd5e1;
+  --mdt-input: #ffffff;
+  --mdt-hover: #e2e8f0;
+  --mdt-text: #0f172a;
+  --mdt-text-muted: #64748b;
+}
+
+.mdt-theme-root {
+  background-color: var(--mdt-bg);
+  color: var(--mdt-text);
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .tactical-panel {
+    background-color: var(--mdt-panel, #141418);
+    border-color: var(--mdt-border, #2a2a32);
+    @apply border rounded-lg;
+  }
+  .tactical-btn { @apply px-4 py-3 rounded-lg font-semibold text-sm transition-all active:scale-95 touch-manipulation; }
+
+  /* In-vehicle MDT — large touch targets & readable panes */
+  .mdt-vehicle-btn {
+    @apply min-h-[52px] px-4 py-3 rounded-xl font-bold text-base transition-all active:scale-[0.98] touch-manipulation select-none;
+  }
+  .mdt-vehicle-btn-sm {
+    @apply min-h-[44px] px-3 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-[0.98] touch-manipulation select-none;
+  }
+  .mdt-read-pane {
+    @apply rounded-xl p-4 text-base leading-relaxed;
+    background-color: var(--mdt-surface, #1a1a20);
+    color: var(--mdt-text, #e2e8f0);
+  }
+  .mdt-read-label {
+    @apply text-xs font-bold uppercase tracking-wider mb-1;
+    color: var(--mdt-text-muted, #94a3b8);
+  }
+  .mdt-read-value {
+    @apply text-lg font-medium leading-snug;
+    color: var(--mdt-text, #e2e8f0);
+  }
+  .mdt-tab-bar {
+    @apply flex shrink-0 border-t;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-panel, #141418);
+  }
+  .mdt-tab {
+    @apply relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-xs font-semibold uppercase tracking-wide transition-colors touch-manipulation;
+    color: var(--mdt-text-muted, #94a3b8);
+  }
+  .mdt-tab--active {
+    color: var(--mdt-text, #e2e8f0);
+    background-color: color-mix(in oklab, #3b82f6 12%, var(--mdt-panel, #141418));
+    box-shadow: inset 0 -2px 0 #3b82f6;
+  }
+  .mdt-emergency-btn {
+    @apply w-full min-h-[44px] flex items-center justify-center gap-2 font-bold text-sm uppercase tracking-wide transition-all active:scale-[0.98] touch-manipulation;
+  }
+  .mdt-workspace {
+    @apply flex flex-col flex-1 min-h-0 border-y;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-bg, #0c0c0e);
+  }
+  .mdt-assigned-strip {
+    @apply shrink-0 border-b px-2 py-2;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-surface-alt, #121218);
+  }
+  .mdt-assigned-card-compact {
+    @apply shrink-0 min-w-[min(100%,280px)] max-w-[340px] text-left rounded-lg border p-2.5 transition-all touch-manipulation;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-surface, #1a1a20);
+  }
+  .mdt-status-square {
+    @apply aspect-square flex flex-col items-center justify-center gap-0.5 rounded-lg font-bold text-[10px] sm:text-xs leading-tight text-center px-1 transition-all active:scale-[0.97] touch-manipulation select-none min-w-0;
+  }
+  .mdt-pending-db {
+    @apply shrink-0 border-t font-mono text-[11px] sm:text-xs overflow-x-auto;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-surface-alt, #121218);
+  }
+  .mdt-pending-db-row {
+    @apply flex items-center gap-2 px-3 py-1.5 whitespace-nowrap border-b transition-colors touch-manipulation text-left w-full;
+    border-color: color-mix(in oklab, var(--mdt-border, #2a2a32) 60%, transparent);
+  }
+  .mdt-pending-db-row:hover {
+    background-color: var(--mdt-hover, #1a1a20);
+  }
+  .mdt-pending-db-row--active {
+    background-color: color-mix(in oklab, #3b82f6 12%, var(--mdt-surface-alt, #121218));
+    box-shadow: inset 2px 0 0 #3b82f6;
+  }
+  .mdt-assigned-card {
+    @apply w-full text-left rounded-xl border p-4 transition-all touch-manipulation;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-surface, #1a1a20);
+  }
+  .mdt-assigned-card--active {
+    border-color: #3b82f6;
+    background-color: color-mix(in oklab, #3b82f6 12%, var(--mdt-surface, #1a1a20));
+    box-shadow: 0 0 0 1px color-mix(in oklab, #3b82f6 35%, transparent);
+  }
+
+  /* Dispatch console — readable cards & controls */
+  .dispatch-incident-card {
+    @apply w-full rounded-xl border p-3 text-left transition-all touch-manipulation;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-surface, #1a1a20);
+  }
+  .dispatch-incident-card:hover {
+    border-color: color-mix(in oklab, #64748b 60%, var(--mdt-border, #2a2a32));
+  }
+  .dispatch-incident-card--selected {
+    border-color: #3b82f6;
+    background-color: color-mix(in oklab, #3b82f6 12%, var(--mdt-surface, #1a1a20));
+    box-shadow: 0 0 0 1px color-mix(in oklab, #3b82f6 35%, transparent);
+  }
+  .dispatch-incident-card--drop-target {
+    border-color: #22c55e;
+    background-color: color-mix(in oklab, #22c55e 14%, var(--mdt-surface, #1a1a20));
+    box-shadow: 0 0 0 2px color-mix(in oklab, #22c55e 45%, transparent);
+  }
+  .dispatch-unit-chip--dragging {
+    opacity: 0.45;
+  }
+  .dispatch-unit-chip {
+    @apply mb-2 cursor-grab rounded-xl border p-3 transition-colors active:cursor-grabbing touch-manipulation;
+    border-color: var(--mdt-border, #2a2a32);
+    background-color: var(--mdt-surface, #1a1a20);
+  }
+  .dispatch-unit-chip:hover {
+    border-color: color-mix(in oklab, #3b82f6 45%, transparent);
+    background-color: color-mix(in oklab, #3b82f6 8%, var(--mdt-surface, #1a1a20));
+  }
+  .dispatch-status-btn {
+    @apply rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40 touch-manipulation;
+  }
+  .dispatch-tab {
+    @apply relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[48px] px-2 text-xs font-semibold uppercase tracking-wide transition-colors touch-manipulation;
+    color: var(--mdt-text-muted, #94a3b8);
+  }
+  .dispatch-tab--active {
+    color: var(--mdt-text, #e2e8f0);
+    background-color: color-mix(in oklab, #3b82f6 12%, var(--mdt-panel, #141418));
+    box-shadow: inset 0 -2px 0 #3b82f6;
+  }
+  .priority-p1 { @apply bg-red-600/20 border-red-500 text-red-300; }
+  .priority-p2 { @apply bg-orange-600/20 border-orange-500 text-orange-300; }
+  .priority-p3 { @apply bg-yellow-600/20 border-yellow-500 text-yellow-300; }
+  .status-available { @apply bg-green-600/20 text-green-400; }
+  .status-busy { @apply bg-amber-600/20 text-amber-400; }
+  .status-emergency { @apply bg-red-600 animate-pulse text-white; }
+}
+
+[data-mdt-theme="light"] .bg-\[\#0c0c0e\] { background-color: var(--mdt-input) !important; }
+[data-mdt-theme="light"] .bg-\[\#141418\] { background-color: var(--mdt-surface-alt) !important; }
+[data-mdt-theme="light"] .bg-\[\#1a1a20\] { background-color: var(--mdt-surface) !important; }
+[data-mdt-theme="light"] .bg-\[\#121218\] { background-color: var(--mdt-surface-alt) !important; }
+[data-mdt-theme="light"] .bg-\[\#2a2a32\] { background-color: #e2e8f0 !important; }
+[data-mdt-theme="light"] .border-\[\#2a2a32\] { border-color: var(--mdt-border) !important; }
+[data-mdt-theme="light"] .border-\[\#2a2a32\]\/50 { border-color: color-mix(in oklab, var(--mdt-border) 50%, transparent) !important; }
+[data-mdt-theme="light"] .hover\:bg-\[\#1a1a20\]:hover { background-color: var(--mdt-hover) !important; }
+[data-mdt-theme="light"] .hover\:bg-\[\#141418\]:hover { background-color: var(--mdt-hover) !important; }
+[data-mdt-theme="light"] .text-slate-100 { color: #0f172a !important; }
+[data-mdt-theme="light"] .text-slate-200 { color: #1e293b !important; }
+[data-mdt-theme="light"] .text-slate-300 { color: #334155 !important; }
+[data-mdt-theme="light"] .text-slate-400 { color: #475569 !important; }
+[data-mdt-theme="light"] .text-slate-500 { color: #64748b !important; }
+[data-mdt-theme="light"] .text-slate-600 { color: #64748b !important; }
+[data-mdt-theme="light"] .ring-offset-\[\#141418\] { --tw-ring-offset-color: var(--mdt-panel) !important; }
+[data-mdt-theme="light"] .tactical-map .mapboxgl-ctrl-group {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+[data-mdt-theme="light"] .tactical-map .mapboxgl-ctrl-group button {
+  filter: none;
+}
+[data-mdt-theme="light"] .tactical-map .mapboxgl-ctrl-scale {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+/* Live Comms — theme-aware messaging */
+.mdt-comms-divider {
+  border-color: var(--mdt-border, #2a2a32);
+}
+.mdt-comms-message {
+  background-color: var(--mdt-surface, #1a1a20);
+  color: var(--mdt-text, #e2e8f0);
+}
+.mdt-comms-message--own {
+  border: 1px solid color-mix(in oklab, #3b82f6 35%, transparent);
+}
+.mdt-comms-message--emergency {
+  background-color: color-mix(in oklab, #dc2626 18%, var(--mdt-surface, #1a1a20));
+  border: 1px solid color-mix(in oklab, #ef4444 45%, transparent);
+  color: var(--mdt-text, #e2e8f0);
+}
+[data-mdt-theme="light"] .mdt-comms-message--emergency {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+.mdt-comms-sender {
+  color: var(--mdt-text, #cbd5e1);
+  font-weight: 600;
+}
+[data-mdt-theme="light"] .mdt-comms-sender {
+  color: #334155;
+}
+.mdt-comms-meta {
+  color: var(--mdt-text-muted, #64748b);
+}
+.mdt-comms-empty {
+  color: var(--mdt-text-muted, #64748b);
+}
+.mdt-comms-input {
+  background-color: var(--mdt-input, #0c0c0e);
+  border: 1px solid var(--mdt-border, #2a2a32);
+  color: var(--mdt-text, #e2e8f0);
+}
+.mdt-comms-input::placeholder {
+  color: var(--mdt-text-muted, #64748b);
+}
+.mdt-comms-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+.mdt-comms-quick {
+  background-color: var(--mdt-surface-alt, #121218);
+  border: 1px solid var(--mdt-border, #2a2a32);
+  color: var(--mdt-text-muted, #94a3b8);
+}
+.mdt-comms-quick:hover {
+  background-color: var(--mdt-hover, #1a1a20);
+  color: var(--mdt-text, #e2e8f0);
+}
+[data-mdt-theme="light"] .mdt-comms-quick {
+  background-color: #f1f5f9;
+}
+[data-mdt-theme="light"] .mdt-comms-quick:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.tactical-map .mapboxgl-ctrl-group {
+  background: #1a1a20;
+  border: 1px solid #2a2a32;
+}
+.tactical-map .mapboxgl-ctrl-group button {
+  filter: invert(1);
+}
+.tactical-map .mapboxgl-ctrl-scale {
+  background: rgba(20, 20, 24, 0.85);
+  border-color: #2a2a32;
+  color: #94a3b8;
+  font-size: 10px;
+}

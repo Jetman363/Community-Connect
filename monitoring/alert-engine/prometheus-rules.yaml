@@ -1,0 +1,17 @@
+groups:
+  - name: alert-engine
+    rules:
+      - alert: AlertEngineDown
+        expr: up{job="alert-engine"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Alert Engine is unreachable
+      - alert: AlertIngestionLag
+        expr: alert_engine_alerts_ingested_total == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: No alerts ingested in 10 minutes

@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  auth-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r auth/service/requirements.txt
+      - name: Run auth tests
+        run: pytest auth/service/tests -q
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r services/integration-service/requirements.txt
+      - name: Run integration service tests
+        working-directory: services/integration-service
+        env:
+          PYTHONPATH: ../../shared/python:.
+        run: pytest tests -q

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-gateway
+  labels:
+    app: websocket-gateway
+    component: bluecore
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: websocket-gateway
+  template:
+    metadata:
+      labels:
+        app: websocket-gateway
+    spec:
+      containers:
+        - name: websocket-gateway
+          image: bluecore/websocket-gateway:latest
+          ports:
+            - containerPort: 8061
+          envFrom:
+            - secretRef:
+                name: alert-engine-secrets
+            - configMapRef:
+                name: alert-engine-config
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8061
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket-gateway
+spec:
+  selector:
+    app: websocket-gateway
+  ports:
+    - port: 8061
+      targetPort: 8061
+  type: ClusterIP

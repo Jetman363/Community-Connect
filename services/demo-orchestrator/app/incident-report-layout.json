@@ -1,0 +1,184 @@
+{
+  "source_system": "Operations Platform",
+  "template_name": "Incident Report — Standard",
+  "template_version": "2026.1",
+  "sections": [
+    {
+      "id": "header",
+      "title": "Report Header",
+      "subtitle": "Core incident identification and assignment",
+      "repeatable": false,
+      "min_entries": 1,
+      "default_open": true,
+      "fields": [
+        { "id": "incident_number", "label": "Incident Number", "type": "text", "required": true },
+        { "id": "case_number", "label": "Case Number", "type": "text" },
+        { "id": "report_date", "label": "Report Date", "type": "date", "required": true },
+        { "id": "report_time", "label": "Report Time", "type": "time" },
+        { "id": "reporting_officer_name", "label": "Reporting Officer", "type": "text", "required": true },
+        { "id": "supervisor_name", "label": "Supervisor", "type": "text" },
+        { "id": "incident_location", "label": "Incident Location", "type": "text", "required": true, "span": 2 },
+        { "id": "incident_type", "label": "Incident Type", "type": "text", "required": true },
+        { "id": "call_type", "label": "Call Type", "type": "select", "options": ["911", "Officer Initiated", "Citizen Report", "Follow-Up", "Other"] },
+        { "id": "priority_level", "label": "Priority Level", "type": "select", "options": ["Emergency", "Priority", "Routine", "Low"] },
+        { "id": "agency", "label": "Agency", "type": "text" },
+        { "id": "division_unit", "label": "Division / Unit", "type": "text" },
+        { "id": "assisting_officers", "label": "Assisting Officer(s)", "type": "text", "span": 2, "placeholder": "Comma-separated names or badge numbers" }
+      ]
+    },
+    {
+      "id": "victims",
+      "title": "Complainant / Victim Information",
+      "subtitle": "CJI-protected personal identifiers",
+      "repeatable": true,
+      "entry_label": "Entry",
+      "add_label": "Add Another Victim / Complainant",
+      "min_entries": 1,
+      "default_open": true,
+      "fields": [
+        { "id": "role", "label": "Role", "type": "select", "options": ["victim", "complainant", "witness"], "default": "victim" },
+        { "id": "full_name", "label": "Full Name", "type": "text" },
+        { "id": "date_of_birth", "label": "Date of Birth", "type": "date" },
+        { "id": "gender", "label": "Gender", "type": "text" },
+        { "id": "race_ethnicity", "label": "Race / Ethnicity", "type": "text" },
+        { "id": "phone_number", "label": "Phone Number", "type": "tel" },
+        { "id": "email_address", "label": "Email Address", "type": "email" },
+        { "id": "driver_license", "label": "Driver License / State ID", "type": "text", "span": 2 },
+        { "id": "home_address", "label": "Home Address", "type": "text", "span": 2 },
+        { "id": "relationship_to_incident", "label": "Relationship to Incident", "type": "text" },
+        { "id": "injury_information", "label": "Injury Information", "type": "text", "span": 2 },
+        { "id": "statement_summary", "label": "Statement Summary", "type": "textarea", "span": 2 }
+      ]
+    },
+    {
+      "id": "suspects",
+      "title": "Suspect Information",
+      "repeatable": true,
+      "entry_label": "Suspect",
+      "add_label": "Add Another Suspect",
+      "min_entries": 1,
+      "default_open": true,
+      "fields": [
+        { "id": "is_unknown", "label": "Flag suspect as unknown", "type": "checkbox" },
+        { "id": "full_name", "label": "Full Name", "type": "text" },
+        { "id": "alias", "label": "Alias / Nickname", "type": "text" },
+        { "id": "dob", "label": "DOB", "type": "date" },
+        { "id": "gender", "label": "Gender", "type": "text" },
+        { "id": "race", "label": "Race", "type": "text" },
+        { "id": "height", "label": "Height", "type": "text", "placeholder": "e.g. 5'10\"" },
+        { "id": "weight", "label": "Weight", "type": "text" },
+        { "id": "hair_color", "label": "Hair Color", "type": "text" },
+        { "id": "eye_color", "label": "Eye Color", "type": "text" },
+        { "id": "clothing_description", "label": "Clothing Description", "type": "textarea", "span": 2 },
+        { "id": "identifying_marks", "label": "Identifying Marks / Tattoos", "type": "text", "span": 2 },
+        { "id": "address", "label": "Address", "type": "text" },
+        { "id": "phone_number", "label": "Phone Number", "type": "tel" },
+        { "id": "gang_affiliation", "label": "Gang Affiliation", "type": "text" },
+        { "id": "warrants_known", "label": "Warrants Known", "type": "text" },
+        { "id": "arrested", "label": "Arrested", "type": "yes_no" },
+        { "id": "miranda_given", "label": "Miranda Given", "type": "yes_no" },
+        { "id": "charges", "label": "Charges", "type": "text", "span": 2 },
+        { "id": "photo_placeholder", "label": "Photo Attachment", "type": "text", "span": 2, "placeholder": "Photo reference / evidence tag" }
+      ]
+    },
+    {
+      "id": "vehicles",
+      "title": "Vehicle Information",
+      "repeatable": true,
+      "entry_label": "Vehicle",
+      "add_label": "Add Vehicle",
+      "min_entries": 0,
+      "default_open": false,
+      "fields": [
+        { "id": "year", "label": "Year", "type": "text" },
+        { "id": "make", "label": "Make", "type": "text" },
+        { "id": "model", "label": "Model", "type": "text" },
+        { "id": "color", "label": "Color", "type": "text" },
+        { "id": "style", "label": "Style", "type": "text", "placeholder": "Sedan, SUV, etc." },
+        { "id": "license_plate", "label": "License Plate", "type": "text" },
+        { "id": "state", "label": "State", "type": "text" },
+        { "id": "vin", "label": "VIN", "type": "text", "span": 2 },
+        { "id": "damage_description", "label": "Damage Description", "type": "text", "span": 2 },
+        { "id": "registered_owner", "label": "Registered Owner", "type": "text" },
+        { "id": "towed", "label": "Towed", "type": "yes_no" },
+        { "id": "tow_company", "label": "Tow Company", "type": "text" },
+        { "id": "associated_person", "label": "Associated Person", "type": "text" }
+      ]
+    },
+    {
+      "id": "weapons",
+      "title": "Weapons",
+      "repeatable": true,
+      "entry_label": "Weapon",
+      "add_label": "Add Weapon",
+      "min_entries": 0,
+      "default_open": false,
+      "fields": [
+        { "id": "weapon_type", "label": "Weapon Type", "type": "text" },
+        { "id": "make", "label": "Make", "type": "text" },
+        { "id": "model", "label": "Model", "type": "text" },
+        { "id": "caliber", "label": "Caliber", "type": "text" },
+        { "id": "serial_number", "label": "Serial Number", "type": "text" },
+        { "id": "evidence_tag_number", "label": "Evidence Tag Number", "type": "text" },
+        { "id": "loaded", "label": "Loaded", "type": "yes_no" },
+        { "id": "recovered", "label": "Recovered", "type": "yes_no" },
+        { "id": "stolen", "label": "Stolen", "type": "yes_no" },
+        { "id": "associated_suspect", "label": "Associated Suspect", "type": "text", "span": 2 }
+      ]
+    },
+    {
+      "id": "property_items",
+      "title": "Property / Evidence",
+      "repeatable": true,
+      "entry_label": "Property Item",
+      "add_label": "Add Another Property Item",
+      "min_entries": 0,
+      "default_open": false,
+      "fields": [
+        { "id": "property_type", "label": "Property Type", "type": "text" },
+        { "id": "serial_number", "label": "Serial Number", "type": "text" },
+        { "id": "value", "label": "Value", "type": "text", "placeholder": "$" },
+        { "id": "owner", "label": "Owner", "type": "text" },
+        { "id": "evidence_number", "label": "Evidence Number", "type": "text" },
+        { "id": "recovered", "label": "Recovered", "type": "yes_no" },
+        { "id": "damaged", "label": "Damaged", "type": "yes_no" },
+        { "id": "description", "label": "Description", "type": "textarea", "span": 2 },
+        { "id": "chain_of_custody_notes", "label": "Chain of Custody Notes", "type": "textarea", "span": 2 }
+      ]
+    },
+    {
+      "id": "narcotics",
+      "title": "Narcotics Evidence",
+      "repeatable": true,
+      "entry_label": "Narcotics Entry",
+      "add_label": "Add Narcotics Entry",
+      "min_entries": 0,
+      "default_open": false,
+      "fields": [
+        { "id": "drug_type", "label": "Drug Type", "type": "text" },
+        { "id": "packaging_type", "label": "Packaging Type", "type": "text" },
+        { "id": "quantity", "label": "Quantity", "type": "text" },
+        { "id": "weight_metric", "label": "Weight (Metric)", "type": "text" },
+        { "id": "weight_metric_unit", "label": "Metric Unit", "type": "select", "options": ["grams", "kilograms"], "default": "grams" },
+        { "id": "weight_standard", "label": "Weight (Standard)", "type": "text" },
+        { "id": "weight_standard_unit", "label": "Standard Unit", "type": "select", "options": ["ounces", "pounds"], "default": "ounces" },
+        { "id": "estimated_street_value", "label": "Estimated Street Value", "type": "text" },
+        { "id": "test_performed", "label": "Test Performed", "type": "text" },
+        { "id": "test_result", "label": "Test Result", "type": "text" },
+        { "id": "evidence_number", "label": "Evidence Number", "type": "text" },
+        { "id": "associated_suspect", "label": "Associated Suspect", "type": "text", "span": 2 }
+      ]
+    },
+    {
+      "id": "narrative",
+      "title": "Officer Narrative",
+      "subtitle": "Structured narrative for RMS submission",
+      "repeatable": false,
+      "min_entries": 1,
+      "default_open": true,
+      "fields": [
+        { "id": "narrative", "label": "Narrative", "type": "textarea", "required": true, "span": 2 }
+      ]
+    }
+  ]
+}

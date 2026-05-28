@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-engine
+  labels:
+    app: alert-engine
+    component: bluecore
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alert-engine
+  template:
+    metadata:
+      labels:
+        app: alert-engine
+    spec:
+      containers:
+        - name: alert-engine
+          image: bluecore/alert-engine:latest
+          ports:
+            - containerPort: 8060
+          envFrom:
+            - secretRef:
+                name: alert-engine-secrets
+            - configMapRef:
+                name: alert-engine-config
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8060
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8060
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-engine
+spec:
+  selector:
+    app: alert-engine
+  ports:
+    - port: 8060
+      targetPort: 8060
+  type: ClusterIP

@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  RESIDENT
+  BUSINESS_OWNER
+  MODERATOR
+  ADMIN
+  PUBLIC_SAFETY
+  HOA_MANAGER
+}
+
+enum PostCategory {
+  GENERAL
+  NEIGHBORHOOD
+  SAFETY
+  EVENTS
+  MARKETPLACE
+  HOA
+}
+
+enum AlertSeverity {
+  INFO
+  ADVISORY
+  WARNING
+  EMERGENCY
+}
+
+enum ReportStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ListingType {
+  FOR_SALE
+  WANTED
+  JOB
+  SERVICE
+}
+
+enum VoteStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  role          UserRole  @default(RESIDENT)
+  verified      Boolean   @default(false)
+  provider      String?   // google | apple | facebook | local
+  providerId    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       Profile?
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  reports       Report[]
+  notifications Notification[]
+  auditLogs     AuditLog[] @relation("AuditActor")
+  rsvps         RSVP[]
+  marketplace   MarketplaceListing[]
+  pollVotes     PollVote[]
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  avatarUrl   String?
+  bio         String?
+  neighborhood String?
+  phone       String?
+  badges      String[] @default([])
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  authorId    String
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title       String?
+  content     String
+  category    PostCategory @default(GENERAL)
+  mediaUrls   String[]     @default([])
+  videoUrl    String?
+  shareCount  Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  comments    Comment[]
+  likes       Like[]
+  poll        Poll?
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Poll {
+  id        String     @id @default(cuid())
+  postId    String     @unique
+  post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  question  String
+  options   String[]
+  endsAt    DateTime?
+  votes     PollVote[]
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  optionIdx Int
+  createdAt DateTime @default(now())
+
+  @@unique([pollId, userId])
+}
+
+model SafetyAlert {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  severity    AlertSeverity @default(INFO)
+  lat         Float?
+  lng         Float?
+  active      Boolean       @default(true)
+  source      String?       // police, fire, weather
+  createdAt   DateTime      @default(now())
+  expiresAt   DateTime?
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  address     String?
+  phone       String?
+  website     String?
+  lat         Float?
+  lng         Float?
+  rating      Float    @default(0)
+  verified    Boolean  @default(false)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  lat         Float?
+  lng         Float?
+  startsAt    DateTime
+  endsAt      DateTime?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  rsvps       RSVP[]
+}
+
+model RSVP {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("going") // going | maybe | not_going
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String
+  reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  category    String?
+  aiCategory  String?
+  status      ReportStatus @default(SUBMITTED)
+  lat         Float?
+  lng         Float?
+  mediaUrls   String[]     @default([])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model MarketplaceListing {
+  id          String      @id @default(cuid())
+  sellerId    String
+  seller      User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  price       Float?
+  type        ListingType @default(FOR_SALE)
+  imageUrl    String?
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+}
+
+model HOAAnnouncement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  priority  String   @default("normal")
+  createdAt DateTime @default(now())
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  category  String?
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  options     String[]
+  status      VoteStatus @default(DRAFT)
+  endsAt      DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  resource  String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+}

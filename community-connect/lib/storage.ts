@@ -31,11 +31,19 @@ export async function storeUpload(buffer: Buffer, filename: string): Promise<Sto
   };
 }
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "application/pdf",
+];
+const MAX_SIZE = 10 * 1024 * 1024;
 
 export function validateUpload(mimeType: string, size: number): string | null {
   if (!ALLOWED_TYPES.includes(mimeType)) return "Invalid file type";
-  if (size > MAX_SIZE) return "File too large (max 5MB)";
+  if (size > MAX_SIZE) return "File too large (max 10MB)";
   return null;
 }

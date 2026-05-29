@@ -1,20 +1,22 @@
 "use client";
 
-import { PageTransition, PageHeader } from "@/components/ui/page-header";
+import { PageTransition } from "@/components/ui/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FeedPostCard } from "@/components/cards/feed-post";
-import { currentUser, mockPosts } from "@/lib/mock-data";
+import { currentUser } from "@/lib/mock-data";
+import { getMockFeedPosts } from "@/lib/api/fallback";
 import { Settings, MapPin, Calendar, Award } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function ProfilePage() {
   const user = currentUser;
-  const userPosts = mockPosts.filter((p) => p.authorId === user.id);
-  const savedPosts = mockPosts.filter((p) => p.saved);
+  const feedPosts = getMockFeedPosts();
+  const userPosts = feedPosts.filter((p) => p.authorId === user.id);
+  const savedPosts = feedPosts.filter((p) => p.saved);
 
   return (
     <PageTransition>

@@ -11,6 +11,7 @@ import {
   FileText,
   User,
   Settings,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,17 +24,17 @@ export interface NavItem {
 
 export const sidebarNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/feed", label: "Community", icon: MessageSquare },
+  { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/marketplace", label: "Marketplace", icon: Store },
   { href: "/services", label: "Services", icon: Building2 },
-  { href: "/messages", label: "Messages", icon: MessageSquare },
+  { href: "/messages", label: "Messages", icon: Mail },
   { href: "/map", label: "Map", icon: Map },
   { href: "/hoa", label: "HOA", icon: FileText },
-  { href: "/assistant", label: "AI Assistant", icon: Bot },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/assistant", label: "AI Assistant", icon: Bot },
   { href: "/admin", label: "Admin", icon: Shield, adminOnly: true },
 ];
 

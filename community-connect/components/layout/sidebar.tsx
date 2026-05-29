@@ -41,40 +41,6 @@ export function Sidebar() {
             </Link>
           );
         })}
-        <div className="my-4 h-px bg-[var(--border)]" />
-        <Link
-          href="/profile"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-            pathname === "/profile"
-              ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-              : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-          )}
-        >
-          Profile
-        </Link>
-        <Link
-          href="/messages"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-            pathname === "/messages"
-              ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-              : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-          )}
-        >
-          Messages
-        </Link>
-        <Link
-          href="/settings"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-            pathname === "/settings"
-              ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-              : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-          )}
-        >
-          Settings
-        </Link>
       </nav>
     </aside>
   );

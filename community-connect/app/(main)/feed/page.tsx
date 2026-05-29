@@ -1,57 +1,56 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { FilterChipsAnimated } from "@/components/ui/filter-chips";
 import { FeedPostCard } from "@/components/cards/feed-post";
-import { SkeletonCard } from "@/components/ui/skeleton";
-import { mockPosts, postCategories, type PostCategory } from "@/lib/mock-data/posts";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { PostComposer } from "@/components/feed/post-composer";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useFeed } from "@/hooks/use-feed";
+import { postCategories } from "@/lib/mock-data/posts";
 
 export default function FeedPage() {
-  const [category, setCategory] = useState<PostCategory | "all">("all");
-  const [visible, setVisible] = useState(4);
-  const [loading, setLoading] = useState(false);
-  const observerRef = useRef<HTMLDivElement>(null);
-
-  const filtered =
-    category === "all" ? mockPosts : mockPosts.filter((p) => p.category === category);
-
-  const loadMore = useCallback(() => {
-    if (visible >= filtered.length) return;
-    setLoading(true);
-    setTimeout(() => {
-      setVisible((v) => Math.min(v + 2, filtered.length));
-      setLoading(false);
-    }, 600);
-  }, [visible, filtered.length]);
+  const [category, setCategory] = useState<string>("all");
+  const [sort, setSort] = useState<"latest" | "trending">("latest");
+  const { posts, loading, loadingMore, hasMore, loadMore, addPost, updatePostLocal, source } =
+    useFeed({ category, sort });
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = observerRef.current;
+    const el = sentinelRef.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) loadMore();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px" }
     );
-    obs.observe(el);
-    return () => obs.disconnect();
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [loadMore]);
 
   return (
     <PageTransition>
       <PageHeader
         title="Community Feed"
-        description="Posts, updates, and conversations from your neighbors"
-        action={
-          <Button size="sm">
-            <Plus className="h-4 w-4" />
-            New Post
-          </Button>
-        }
+        description="Posts, polls, and updates from your neighbors"
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <FilterChipsAnimated
+          options={[
+            { id: "latest", label: "Latest" },
+            { id: "trending", label: "Trending" },
+          ]}
+          value={sort}
+          onChange={(v) => setSort(v as "latest" | "trending")}
+        />
+        {source === "mock" && (
+          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600">
+            Demo data (DB offline)
+          </span>
+        )}
+      </div>
 
       <FilterChipsAnimated
         options={postCategories}
@@ -61,14 +60,36 @@ export default function FeedPage() {
       />
 
       <div className="mx-auto max-w-2xl space-y-4">
-        {filtered.slice(0, visible).map((post) => (
-          <FeedPostCard key={post.id} post={post} />
-        ))}
-        {loading && <SkeletonCard />}
-        <div ref={observerRef} className="h-4" />
-        {visible >= filtered.length && (
+        <PostComposer onPost={addPost} />
+
+        {loading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        ) : (
+          posts.map((post) => (
+            <FeedPostCard key={post.id} post={post} onUpdate={updatePostLocal} />
+          ))
+        )}
+
+        {loadingMore && (
+          <div className="space-y-4">
+            <Skeleton className="h-40 w-full" />
+          </div>
+        )}
+
+        <div ref={sentinelRef} className="h-4" />
+
+        {!hasMore && posts.length > 0 && !loading && (
           <p className="py-4 text-center text-sm text-[var(--muted-foreground)]">
             You&apos;re all caught up
+          </p>
+        )}
+
+        {!loading && posts.length === 0 && (
+          <p className="py-8 text-center text-sm text-[var(--muted-foreground)]">
+            No posts yet — be the first to share!
           </p>
         )}
       </div>

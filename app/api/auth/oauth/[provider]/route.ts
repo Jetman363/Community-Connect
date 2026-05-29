@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-/** OAuth stub — wire provider SDKs in production */
+/** OAuth provider stub — wire real OAuth in Phase 2+. */
 export async function GET(
-  _req: NextRequest,
+  _req: Request,
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
-  const allowed = ["google", "apple", "facebook"];
-  if (!allowed.includes(provider)) {
-    return NextResponse.json({ error: "Unknown provider" }, { status: 400 });
-  }
-  return NextResponse.json({
-    message: `${provider} OAuth stub`,
-    authorizeUrl: `/api/auth/oauth/${provider}/callback?code=stub`,
-  });
+  return NextResponse.json(
+    {
+      error: "Not implemented",
+      provider,
+      message: "OAuth integration is stubbed for Phase 1. Use email/password auth.",
+    },
+    { status: 501 }
+  );
 }

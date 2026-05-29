@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken, AUTH_COOKIE } from "@/lib/auth";
-
-const protectedPaths = [
-  "/dashboard",
-  "/feed",
-  "/alerts",
-  "/events",
-  "/marketplace",
-  "/admin",
-  "/assistant",
-  "/map",
-  "/profile",
-  "/report",
-  "/hoa",
-  "/services",
-];
+import { adminRoutes, protectedRoutes } from "@/config/routes";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProtected = protectedPaths.some(
+  const isProtected = protectedRoutes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
 
@@ -32,7 +18,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (pathname.startsWith("/admin")) {
+  const isAdminRoute = adminRoutes.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+  if (isAdminRoute) {
     const payload = verifyToken(token)!;
     if (payload.role !== "ADMIN" && payload.role !== "MODERATOR") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -55,7 +44,8 @@ export const config = {
     "/profile",
     "/report",
     "/hoa",
-  "/services",
+    "/services",
+    "/messages",
     "/dashboard/:path*",
     "/feed/:path*",
     "/alerts/:path*",
@@ -68,5 +58,6 @@ export const config = {
     "/report/:path*",
     "/hoa/:path*",
     "/services/:path*",
+    "/messages/:path*",
   ],
 };

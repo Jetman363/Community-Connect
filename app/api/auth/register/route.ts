@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       user: { id: user.id, email: user.email, role: user.role, displayName: user.profile?.displayName },
     });
     setAuthCookie(res, token);
-    await logAudit({ actorId: user.id, action: "user.register", resource: user.id });
+    logAudit({ actorId: user.id, action: "user.register", resource: user.id });
     return res;
   } catch {
     return NextResponse.json({ error: "Database unavailable. Run migrations and seed." }, { status: 503 });

@@ -1,12 +1,9 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { demoBusinesses } from "@/lib/demo-data";
+import { phase2Stub } from "@/lib/api/stub";
 
 export async function GET() {
-  try {
-    const businesses = await prisma.business.findMany({ orderBy: { rating: "desc" }, take: 50 });
-    return NextResponse.json({ items: businesses });
-  } catch {
-    return NextResponse.json({ items: demoBusinesses });
-  }
+  return phase2Stub("businesses", ["GET"]);
+}
+
+export async function POST() {
+  return phase2Stub("businesses", ["POST"]);
 }

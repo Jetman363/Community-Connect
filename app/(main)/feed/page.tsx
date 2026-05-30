@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { FilterChipsAnimated } from "@/components/ui/filter-chips";
-import { FeedPostCard } from "@/components/cards/feed-post";
+import { SwipeableFeedCard } from "@/components/feed/swipeable-feed-card";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { PostComposer } from "@/components/feed/post-composer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeed } from "@/hooks/use-feed";
@@ -16,7 +17,7 @@ import { FeedLoginPrompt } from "@/components/feed/feed-login-prompt";
 export default function FeedPage() {
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<"latest" | "trending">("latest");
-  const { posts, loading, loadingMore, hasMore, loadMore, addPost, source, unauthorized } =
+  const { posts, loading, loadingMore, hasMore, loadMore, addPost, source, unauthorized, refresh } =
     useFeed({ category, sort });
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +72,7 @@ export default function FeedPage() {
         className="mb-6"
       />
 
+      <PullToRefresh onRefresh={async () => refresh()}>
       <div className="mx-auto max-w-2xl space-y-4">
         <PostComposer onPost={addPost} />
 
@@ -82,7 +84,7 @@ export default function FeedPage() {
             <Skeleton className="h-40 w-full" />
           </div>
         ) : (
-          posts.map((post) => <FeedPostCard key={post.id} post={post} />)
+          posts.map((post) => <SwipeableFeedCard key={post.id} post={post} />)
         )}
 
         {loadingMore && (
@@ -117,6 +119,7 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+      </PullToRefresh>
     </PageTransition>
   );
 }

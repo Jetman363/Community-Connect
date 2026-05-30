@@ -388,6 +388,59 @@ enum VoteStatus {
   CLOSED
 }
 
+enum ConnectorCategory {
+  PUBLIC_SAFETY
+  GOVERNMENT
+  SMART_CITY
+  BUSINESS
+  HOA
+  MAPPING
+  NOTIFICATION
+  IDENTITY
+}
+
+enum SyncDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum SyncStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+enum ConnectorHealthStatus {
+  HEALTHY
+  DEGRADED
+  UNHEALTHY
+  UNKNOWN
+}
+
+enum AutomationRunStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum AutomationTriggerType {
+  NEW_INCIDENT
+  NEW_REPORT
+  NEW_ALERT
+  VERIFICATION_APPROVED
+  CUSTOM
+}
+
+enum CredentialType {
+  API_KEY
+  OAUTH
+  WEBHOOK_SECRET
+  BASIC
+}
+
 // ─── Core ────────────────────────────────────────────────────────────────────
 
 model Community {
@@ -432,6 +485,7 @@ model Community {
   auditLogs            AuditLog[]
   dailyMetrics         DailyCommunityMetrics[]
   dailySafetyMetrics   DailySafetyMetrics[]
+  integrationConnectors IntegrationConnector[]
 
   @@index([active])
   @@index([organizationId])
@@ -1263,9 +1317,13 @@ model Organization {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  communities     Community[]
-  roleAssignments UserRoleAssignment[]
-  auditLogs       AuditLog[]
+  communities           Community[]
+  roleAssignments       UserRoleAssignment[]
+  auditLogs             AuditLog[]
+  integrationConnectors IntegrationConnector[]
+  tenantBranding        TenantBranding?
+  onboarding            OrganizationOnboarding?
+  workflowAutomations   WorkflowAutomation[]
 
   @@index([type])
 }
@@ -1613,4 +1671,162 @@ model AuditLog {
   @@index([communityId, createdAt(sort: Desc)])
   @@index([organizationId, createdAt(sort: Desc)])
   @@index([resource, resourceId])
+}
+
+// ─── Phase 9: Integrations & Enterprise ──────────────────────────────────────
+
+model IntegrationConnector {
+  id             String            @id @default(cuid())
+  slug           String
+  name           String
+  category       ConnectorCategory
+  enabled        Boolean           @default(false)
+  config         Json?
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  communityId    String?
+  community      Community?        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  credentials   IntegrationCredential[]
+  syncLogs      IntegrationSyncLog[]
+  webhooks      IntegrationWebhook[]
+  subscriptions IntegrationEventSubscription[]
+  healthChecks  ConnectorHealthCheck[]
+
+  @@unique([slug, organizationId, communityId])
+  @@index([organizationId, enabled])
+  @@index([communityId, enabled])
+  @@index([category])
+}
+
+model IntegrationCredential {
+  id               String         @id @default(cuid())
+  connectorId      String
+  connector        IntegrationConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  type             CredentialType @default(API_KEY)
+  encryptedPayload String
+  keyHint          String?
+  rotatedAt        DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([connectorId])
+}
+
+model IntegrationSyncLog {
+  id             String        @id @default(cuid())
+  connectorId    String
+  connector      IntegrationConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  direction      SyncDirection
+  status         SyncStatus    @default(PENDING)
+  payloadSummary String?
+  error          String?
+  createdAt      DateTime      @default(now())
+
+  @@index([connectorId, createdAt(sort: Desc)])
+  @@index([status])
+}
+
+model IntegrationWebhook {
+  id          String   @id @default(cuid())
+  connectorId String
+  connector   IntegrationConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  url         String
+  events      String[] @default([])
+  secretHash  String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([connectorId, active])
+}
+
+model IntegrationEventSubscription {
+  id          String   @id @default(cuid())
+  connectorId String
+  connector   IntegrationConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  eventType   String
+  handler     String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([connectorId, eventType])
+  @@index([eventType, active])
+}
+
+model ConnectorHealthCheck {
+  id          String                @id @default(cuid())
+  connectorId String
+  connector   IntegrationConnector  @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  status      ConnectorHealthStatus @default(UNKNOWN)
+  lastCheck   DateTime              @default(now())
+  metrics     Json?
+  message     String?
+
+  @@index([connectorId, lastCheck(sort: Desc)])
+}
+
+model WorkflowAutomation {
+  id             String                @id @default(cuid())
+  name           String
+  trigger        AutomationTriggerType
+  conditions     Json?
+  actions        Json
+  enabled        Boolean               @default(false)
+  organizationId String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  communityId    String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  runLogs AutomationRunLog[]
+
+  @@index([organizationId, enabled])
+  @@index([communityId])
+}
+
+model AutomationRunLog {
+  id           String              @id @default(cuid())
+  automationId String
+  automation   WorkflowAutomation  @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  status       AutomationRunStatus @default(PENDING)
+  triggerData  Json?
+  result       Json?
+  error        String?
+  createdAt    DateTime            @default(now())
+
+  @@index([automationId, createdAt(sort: Desc)])
+}
+
+model TenantBranding {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  logoUrl        String?
+  primaryColor   String?
+  accentColor    String?
+  domain         String?
+  featureFlags   Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model OnboardingStep {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model OrganizationOnboarding {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  progress       Json
+  completedAt    DateTime?
+  updatedAt      DateTime     @updatedAt
 }

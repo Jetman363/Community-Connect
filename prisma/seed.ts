@@ -381,12 +381,517 @@ async function main() {
     data: { userId: resident.id, alertId: alerts[1].id },
   });
 
-  console.log("Seed complete (Phase 4).");
-  console.log("Community:", community.slug);
-  console.log("Alerts:", alerts.length, "| Reports: 2 | Geofences: 2");
+  // ─── Phase 5: Marketplace, businesses, jobs ───────────────────────────────
+
+  const businessOwner = await prisma.user.upsert({
+    where: { email: "business@communityconnect.app" },
+    update: {},
+    create: {
+      email: "business@communityconnect.app",
+      passwordHash,
+      role: "BUSINESS_OWNER",
+      verified: true,
+      profile: {
+        create: { displayName: "Maria Chen", neighborhood: "Oak Hills", badges: ["Business Owner"] },
+      },
+    },
+  });
+
+  await prisma.communityMember.upsert({
+    where: { communityId_userId: { communityId: community.id, userId: businessOwner.id } },
+    update: { role: "BUSINESS_OWNER" },
+    create: { communityId: community.id, userId: businessOwner.id, role: "BUSINESS_OWNER" },
+  });
+
+  await prisma.marketplaceListing.deleteMany({ where: { communityId: community.id } });
+  await prisma.business.deleteMany({ where: { communityId: community.id } });
+  await prisma.jobListing.deleteMany({ where: { communityId: community.id } });
+
+  const bakery = await prisma.business.create({
+    data: {
+      communityId: community.id,
+      ownerId: businessOwner.id,
+      name: "Oak Street Bakery",
+      description: "Artisan breads, pastries, and locally roasted coffee.",
+      category: "food",
+      categories: ["Bakery", "Coffee", "Local"],
+      address: "12 Oak St, Oak Hills",
+      phone: "(555) 234-5678",
+      lat: 37.774,
+      lng: -122.42,
+      rating: 4.8,
+      reviewCount: 2,
+      verified: true,
+      verificationBadges: ["community"],
+      imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80",
+      logoUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80",
+      hours: { summary: "Open until 6 PM", mon: "7am-6pm", sat: "8am-4pm" },
+    },
+  });
+
+  const landscaping = await prisma.business.create({
+    data: {
+      communityId: community.id,
+      ownerId: businessOwner.id,
+      name: "Green Thumb Landscaping",
+      description: "Full-service landscaping, lawn care, and seasonal cleanup.",
+      category: "home",
+      categories: ["Landscaping", "Lawn Care"],
+      address: "88 Garden Way, Oak Hills",
+      phone: "(555) 345-6789",
+      lat: 37.776,
+      lng: -122.418,
+      rating: 4.5,
+      reviewCount: 1,
+      verified: true,
+      verificationBadges: ["community", "license"],
+      imageUrl: "https://images.unsplash.com/photo-1598902108854-10e335adac99?w=400&q=80",
+      pricingRange: "$$",
+    },
+  });
+
+  await prisma.businessAnalytics.createMany({
+    data: [
+      { businessId: bakery.id, viewCount: 234, inquiryCount: 12, listingViews: 0 },
+      { businessId: landscaping.id, viewCount: 89, inquiryCount: 5, listingViews: 0 },
+    ],
+  });
+
+  await prisma.service.createMany({
+    data: [
+      {
+        businessId: bakery.id,
+        name: "Custom cake orders",
+        category: "food",
+        priceFrom: 35,
+        priceTo: 120,
+        availability: "Order 48h ahead",
+      },
+      {
+        businessId: landscaping.id,
+        name: "Weekly lawn maintenance",
+        category: "home",
+        priceFrom: 45,
+        priceTo: 85,
+        availability: "Mon–Fri",
+        serviceRadiusM: 5000,
+      },
+    ],
+  });
+
+  await prisma.review.createMany({
+    data: [
+      {
+        businessId: bakery.id,
+        authorId: resident.id,
+        rating: 5,
+        comment: "Best sourdough in the neighborhood. Friendly staff every morning.",
+        verifiedCustomer: true,
+        categoryRatings: { quality: 5, value: 4, professionalism: 5 },
+      },
+      {
+        businessId: bakery.id,
+        authorId: sarah.id,
+        rating: 5,
+        comment: "Their weekend croissants are incredible. Highly recommend.",
+      },
+      {
+        businessId: landscaping.id,
+        authorId: resident.id,
+        rating: 4,
+        comment: "Did a great job on our front yard. Fair pricing and on time.",
+        ownerResponse: "Thank you Alex! Glad you love the new landscaping.",
+        ownerRespondedAt: new Date(),
+      },
+    ],
+  });
+
+  const listings = await Promise.all([
+    prisma.marketplaceListing.create({
+      data: {
+        communityId: community.id,
+        sellerId: resident.id,
+        title: "Patio Furniture Set",
+        description: "Barely used 4-piece patio set. Table + 4 chairs. Pick up only.",
+        price: 200,
+        type: "FOR_SALE",
+        category: "BUY_SELL",
+        featured: true,
+        imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80",
+        lat: 37.773,
+        lng: -122.421,
+        locationLabel: "Oak Hills",
+        viewCount: 42,
+      },
+    }),
+    prisma.marketplaceListing.create({
+      data: {
+        communityId: community.id,
+        sellerId: sarah.id,
+        title: "Dog Walker Needed — 3x/week",
+        description: "Friendly golden retriever, 30-min walks preferred after 3 PM.",
+        price: 20,
+        type: "JOB",
+        category: "GIG",
+        lat: 37.775,
+        lng: -122.419,
+        locationLabel: "Cedar Park",
+        viewCount: 28,
+      },
+    }),
+    prisma.marketplaceListing.create({
+      data: {
+        communityId: community.id,
+        sellerId: james.id,
+        title: "Free Moving Boxes",
+        description: "About 20 medium boxes from recent move. First come first served.",
+        price: 0,
+        type: "FOR_SALE",
+        category: "CLASSIFIEDS",
+        promoted: true,
+        lat: 37.772,
+        lng: -122.423,
+        locationLabel: "Oak Hills",
+        viewCount: 156,
+      },
+    }),
+  ]);
+
+  const job = await prisma.jobListing.create({
+    data: {
+      communityId: community.id,
+      posterId: businessOwner.id,
+      businessId: bakery.id,
+      title: "Part-time Barista",
+      description: "Weekend shifts at Oak Street Bakery. Prior coffee experience preferred.",
+      jobType: "PART_TIME",
+      salaryMin: 18,
+      salaryMax: 22,
+      salaryUnit: "hour",
+      skills: ["customer service", "coffee"],
+      location: "12 Oak St",
+      lat: 37.774,
+      lng: -122.42,
+    },
+  });
+
+  await prisma.inquiry.create({
+    data: {
+      userId: sarah.id,
+      businessId: landscaping.id,
+      message: "Looking for a quote on spring cleanup for a 0.25 acre lot.",
+      quoteRequest: true,
+      status: "NEW",
+    },
+  });
+
+  await prisma.favorite.createMany({
+    data: [
+      { userId: resident.id, targetType: "LISTING", targetId: listings[0].id },
+      { userId: resident.id, targetType: "BUSINESS", targetId: bakery.id },
+      { userId: sarah.id, targetType: "JOB", targetId: job.id },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.verificationRequest.create({
+    data: {
+      businessId: landscaping.id,
+      type: "LICENSE",
+      status: "APPROVED",
+      documents: ["/uploads/license-placeholder.pdf"],
+      reviewedAt: new Date(),
+    },
+  });
+
+  // ─── Phase 7: Enterprise admin ─────────────────────────────────────────────
+
+  const org = await prisma.organization.upsert({
+    where: { slug: "oak-hills-org" },
+    update: {},
+    create: {
+      name: "Oak Hills Municipal Alliance",
+      slug: "oak-hills-org",
+      type: "HOA",
+      settings: { tier: "enterprise" },
+    },
+  });
+
+  await prisma.community.update({
+    where: { id: community.id },
+    data: {
+      organizationId: org.id,
+      brandingColors: { primary: "#2563eb", accent: "#0ea5e9" },
+      settings: { features: ["hoa", "ops", "moderation"] },
+    },
+  });
+
+  const hoaManager = await prisma.user.upsert({
+    where: { email: "hoa@communityconnect.app" },
+    update: { role: "HOA_MANAGER" },
+    create: {
+      email: "hoa@communityconnect.app",
+      passwordHash,
+      role: "HOA_MANAGER",
+      verified: true,
+      profile: { create: { displayName: "HOA Board", badges: ["HOA Manager"] } },
+    },
+  });
+
+  const dispatcher = await prisma.user.upsert({
+    where: { email: "dispatch@communityconnect.app" },
+    update: { role: "DISPATCHER" },
+    create: {
+      email: "dispatch@communityconnect.app",
+      passwordHash,
+      role: "DISPATCHER",
+      verified: true,
+      profile: { create: { displayName: "Dispatch Center", badges: ["Dispatch"] } },
+    },
+  });
+
+  const superAdmin = await prisma.user.upsert({
+    where: { email: "super@communityconnect.app" },
+    update: { role: "SUPER_ADMIN" },
+    create: {
+      email: "super@communityconnect.app",
+      passwordHash,
+      role: "SUPER_ADMIN",
+      verified: true,
+      profile: { create: { displayName: "Super Admin", badges: ["Platform"] } },
+    },
+  });
+
+  for (const [user, role] of [
+    [hoaManager, "HOA_MANAGER"],
+    [dispatcher, "DISPATCHER"],
+    [superAdmin, "SUPER_ADMIN"],
+  ] as const) {
+    await prisma.communityMember.upsert({
+      where: { communityId_userId: { communityId: community.id, userId: user.id } },
+      update: { role },
+      create: { communityId: community.id, userId: user.id, role },
+    });
+  }
+
+  const permDefs = [
+    { key: "posts:moderate", resource: "posts", action: "moderate", scope: "COMMUNITY" as const },
+    { key: "alerts:publish", resource: "alerts", action: "publish", scope: "COMMUNITY" as const },
+    { key: "admin:analytics", resource: "admin", action: "analytics", scope: "GLOBAL" as const },
+    { key: "hoa:vote", resource: "hoa", action: "vote", scope: "COMMUNITY" as const },
+    { key: "moderation:queue", resource: "moderation", action: "queue", scope: "COMMUNITY" as const },
+    { key: "users:suspend", resource: "users", action: "suspend", scope: "GLOBAL" as const },
+    { key: "ops:dispatch", resource: "ops", action: "dispatch", scope: "COMMUNITY" as const },
+  ];
+
+  for (const d of permDefs) {
+    await prisma.permission.upsert({
+      where: { key: d.key },
+      update: {},
+      create: d,
+    });
+  }
+
+  const modPerm = await prisma.permission.findUnique({ where: { key: "moderation:queue" } });
+  if (modPerm) {
+    await prisma.rolePermission.upsert({
+      where: { role_permissionId: { role: "MODERATOR", permissionId: modPerm.id } },
+      update: {},
+      create: { role: "MODERATOR", permissionId: modPerm.id },
+    });
+  }
+
+  await prisma.moderationCase.createMany({
+    data: [
+      {
+        communityId: community.id,
+        entityType: "POST",
+        entityId: post1.id,
+        reporterId: resident.id,
+        aiConfidence: 0.78,
+        status: "OPEN",
+        internalNotes: "AI placeholder: possible spam pattern",
+      },
+      {
+        communityId: community.id,
+        entityType: "LISTING",
+        entityId: listings[0].id,
+        status: "ASSIGNED",
+        assignedModeratorId: admin.id,
+        aiConfidence: 0.55,
+      },
+    ],
+  });
+
+  await prisma.task.createMany({
+    data: [
+      {
+        communityId: community.id,
+        creatorId: admin.id,
+        assigneeId: publicSafety.id,
+        title: "Review suspicious vehicle report",
+        priority: "HIGH",
+        status: "IN_PROGRESS",
+        entityType: "report",
+        entityId: "seed-report",
+      },
+      {
+        communityId: community.id,
+        creatorId: hoaManager.id,
+        title: "Schedule pool maintenance follow-up",
+        priority: "MEDIUM",
+        status: "OPEN",
+      },
+    ],
+  });
+
+  await prisma.workflowCase.createMany({
+    data: [
+      {
+        communityId: community.id,
+        type: "SAFETY",
+        status: "IN_PROGRESS",
+        title: "Streetlight outage cluster",
+        entityType: "report",
+      },
+      {
+        communityId: community.id,
+        type: "HOA",
+        status: "NEW",
+        title: "Playground vote follow-up",
+      },
+    ],
+  });
+
+  const openVote = await prisma.vote.create({
+    data: {
+      communityId: community.id,
+      title: "New playground equipment",
+      description: "Approve budget for playground upgrade",
+      options: ["Approve", "Reject", "Defer"],
+      status: "OPEN",
+      anonymous: false,
+      isBoardElection: false,
+      endsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  await prisma.voteBallot.create({
+    data: { voteId: openVote.id, userId: resident.id, optionIndex: 0 },
+  });
+
+  await prisma.meeting.create({
+    data: {
+      communityId: community.id,
+      title: "Board meeting — June 5",
+      startsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      location: "Community center",
+      minutesUrl: "/uploads/minutes-placeholder.pdf",
+    },
+  });
+
+  await prisma.communityRule.create({
+    data: {
+      communityId: community.id,
+      title: "Quiet hours",
+      content: "10 PM – 7 AM daily. Exceptions for emergencies.",
+      category: "noise",
+    },
+  });
+
+  await prisma.maintenanceRequest.create({
+    data: {
+      communityId: community.id,
+      requesterId: resident.id,
+      title: "Pool gate latch broken",
+      description: "Latch does not secure — safety concern for children.",
+      location: "Community pool",
+      status: "SUBMITTED",
+    },
+  });
+
+  const template = await prisma.notificationTemplate.upsert({
+    where: { key: "community-advisory" },
+    update: {},
+    create: {
+      key: "community-advisory",
+      name: "Community Advisory",
+      subject: "Community Advisory",
+      body: "{{body}}",
+      channels: { push: true, email: true, sms: false },
+    },
+  });
+
+  await prisma.broadcast.create({
+    data: {
+      communityId: community.id,
+      title: "Welcome to Oak Hills Connect",
+      body: "Enterprise notifications are active for this community.",
+      severity: "INFO",
+      templateId: template.id,
+      status: "SENT",
+      sentAt: new Date(),
+      channels: { push: true, email: true },
+    },
+  });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  await prisma.dailyCommunityMetrics.upsert({
+    where: { communityId_date: { communityId: community.id, date: today } },
+    update: {},
+    create: {
+      communityId: community.id,
+      date: today,
+      counts: { posts: 6, members: 8, listings: 3 },
+    },
+  });
+
+  await prisma.dailySafetyMetrics.upsert({
+    where: { communityId_date: { communityId: community.id, date: today } },
+    update: {},
+    create: {
+      communityId: community.id,
+      date: today,
+      counts: { alerts: alerts.length, reports: 2, critical: 1 },
+    },
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        actorId: admin.id,
+        action: "community.settings.update",
+        resource: "community",
+        resourceId: community.id,
+        communityId: community.id,
+        organizationId: org.id,
+        metadata: { phase: 7 },
+        ip: "127.0.0.1",
+      },
+      {
+        actorId: superAdmin.id,
+        action: "permission.seed",
+        resource: "permission",
+        metadata: { count: permDefs.length },
+      },
+    ],
+  });
+
+  await prisma.auditLogRetention.create({
+    data: { organizationId: org.id, retentionDays: 365 },
+  });
+
+  console.log("Seed complete (Phase 7).");
+  console.log("Community:", community.slug, "| Org:", org.slug);
+  console.log("Alerts:", alerts.length, "| Listings:", listings.length, "| Mod cases: 2");
   console.log("Demo login: demo@communityconnect.app / Demo1234!");
   console.log("Resident:   resident@communityconnect.app / Demo1234!");
+  console.log("Business:   business@communityconnect.app / Demo1234!");
   console.log("Safety:     safety@communityconnect.app / Demo1234!");
+  console.log("HOA:        hoa@communityconnect.app / Demo1234!");
+  console.log("Dispatch:   dispatch@communityconnect.app / Demo1234!");
+  console.log("Super:      super@communityconnect.app / Demo1234!");
 }
 
 main()

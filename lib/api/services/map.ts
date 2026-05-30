@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { bboxFromCenter, withinRadiusM } from "@/lib/geo/distance";
 import type { MapMarkerDto } from "@/types/safety";
 
-export type MapLayer = "alerts" | "reports" | "events" | "businesses" | "all";
+export type MapLayer = "alerts" | "reports" | "events" | "businesses" | "listings" | "jobs" | "all";
 
 export interface MapMarkersInput {
   communityId: string;
@@ -157,6 +157,66 @@ export async function getMapMarkers(input: MapMarkersInput): Promise<MapMarkerDt
         lng: b.lng,
         category: b.category,
         meta: { verified: b.verified, rating: b.rating },
+      });
+    }
+  }
+
+  if (layers.includes("all") || layers.includes("listings")) {
+    const listings = await prisma.marketplaceListing.findMany({
+      where: {
+        communityId: input.communityId,
+        status: "ACTIVE",
+        lat: { not: null },
+        lng: { not: null },
+        ...(bbox
+          ? {
+              lat: { gte: bbox.minLat, lte: bbox.maxLat },
+              lng: { gte: bbox.minLng, lte: bbox.maxLng },
+            }
+          : {}),
+      },
+      take: 80,
+    });
+    for (const l of listings) {
+      if (l.lat == null || l.lng == null) continue;
+      markers.push({
+        id: l.id,
+        type: "listing",
+        title: l.title,
+        lat: l.lat,
+        lng: l.lng,
+        category: l.category,
+        meta: { price: l.price, featured: l.featured },
+      });
+    }
+  }
+
+  if (layers.includes("all") || layers.includes("jobs")) {
+    const jobs = await prisma.jobListing.findMany({
+      where: {
+        communityId: input.communityId,
+        status: "ACTIVE",
+        lat: { not: null },
+        lng: { not: null },
+        ...(bbox
+          ? {
+              lat: { gte: bbox.minLat, lte: bbox.maxLat },
+              lng: { gte: bbox.minLng, lte: bbox.maxLng },
+            }
+          : {}),
+      },
+      take: 50,
+    });
+    for (const j of jobs) {
+      if (j.lat == null || j.lng == null) continue;
+      markers.push({
+        id: j.id,
+        type: "job",
+        title: j.title,
+        lat: j.lat,
+        lng: j.lng,
+        category: j.jobType,
+        meta: { remote: j.remote, salaryMin: j.salaryMin },
       });
     }
   }

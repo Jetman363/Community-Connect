@@ -3,7 +3,12 @@ import { requireAuth } from "@/lib/api-auth";
 import { jsonError, jsonOk } from "@/lib/api/response";
 import { withDbTimeout, isDbUnavailable } from "@/lib/api/db";
 import { businessSchema } from "@/lib/validations";
-import { getBusiness, updateBusiness, listBusinessServices } from "@/lib/api/services/businesses";
+import {
+  getBusiness,
+  updateBusiness,
+  listBusinessServices,
+  toBusinessUpdateInput,
+} from "@/lib/api/services/businesses";
 import { getMockBusinessesDto } from "@/lib/api/fallback-marketplace";
 import { canManageBusiness, canModerate } from "@/lib/permissions/rbac";
 
@@ -41,7 +46,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const ownerOnly = !canModerate(auth.payload.role);
   try {
     const business = await withDbTimeout(
-      updateBusiness(id, parsed.data, ownerOnly ? auth.payload.sub : undefined)
+      updateBusiness(id, toBusinessUpdateInput(parsed.data), ownerOnly ? auth.payload.sub : undefined)
     );
     if (!business) return jsonError("Not found or forbidden", 404);
     return jsonOk(business);

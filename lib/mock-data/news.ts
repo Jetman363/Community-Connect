@@ -1,0 +1,56 @@
+import { communityPhotos } from "@/lib/images/community-photos";
+import type { NewsArticleDto } from "@/types/engagement";
+
+export const mockNewsArticles: NewsArticleDto[] = [
+  {
+    id: "n1",
+    title: "City Council Approves New Park Funding",
+    source: "Oak Hills Tribune",
+    summary: "A $2.4M package will expand Cedar Park playground and add shaded picnic areas by fall.",
+    category: "Local Government",
+    publishedAt: new Date(Date.now() - 3600000).toISOString(),
+    imageUrl: communityPhotos.events.blockParty,
+    url: "#",
+    aiSummary: "Major park upgrade coming to Cedar Park — playground, shade structures, and new paths funded for completion this fall.",
+  },
+  {
+    id: "n2",
+    title: "Weekend Weather: Sunny Skies Expected",
+    source: "Bay Area Weather",
+    summary: "Highs near 78°F with light winds — ideal for outdoor events and farmers market.",
+    category: "Weather",
+    publishedAt: new Date(Date.now() - 7200000).toISOString(),
+    imageUrl: communityPhotos.places.park,
+    aiSummary: "Perfect weekend weather ahead — great for markets, hikes, and block parties.",
+  },
+  {
+    id: "n3",
+    title: "New Bike Lane Connects Oak Hills to Downtown",
+    source: "Transit Today",
+    summary: "Protected lane opens Monday, cutting commute time for cyclists by 15 minutes.",
+    category: "Transportation",
+    publishedAt: new Date(Date.now() - 86400000).toISOString(),
+    imageUrl: communityPhotos.places.aerialMap,
+    aiSummary: "Safer cycling route now open — connects neighborhood to downtown with protected lanes.",
+  },
+  {
+    id: "n4",
+    title: "School District Calendar Updates",
+    source: "Oak Hills USD",
+    summary: "Early dismissal Feb 14; spring break March 24–28. Full calendar on district site.",
+    category: "Education",
+    publishedAt: new Date(Date.now() - 172800000).toISOString(),
+    imageUrl: communityPhotos.events.youthSoccer,
+    aiSummary: "Mark your calendars — early dismissal and spring break dates announced for local schools.",
+  },
+  {
+    id: "n5",
+    title: "Local Restaurant Week Returns",
+    source: "Eat Local Oak Hills",
+    summary: "15 restaurants offering prix-fixe menus Feb 10–16. Reservations recommended.",
+    category: "Food",
+    publishedAt: new Date(Date.now() - 259200000).toISOString(),
+    imageUrl: communityPhotos.businesses.bakery,
+    aiSummary: "Restaurant Week is back — special menus at 15 local spots, book early.",
+  },
+];

@@ -8,14 +8,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FeedPostCard } from "@/components/cards/feed-post";
 import { currentUser } from "@/lib/mock-data";
 import { getMockFeedPosts } from "@/lib/api/fallback";
-import { Settings, MapPin, Calendar, Award } from "lucide-react";
+import { Settings, MapPin, Calendar, Award, Flame, Star } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CommunityImage } from "@/components/ui/community-image";
 import { communityPhotos } from "@/lib/images/community-photos";
+import { useRewardsSummary } from "@/hooks/use-personalization";
 
 export default function ProfilePage() {
   const user = currentUser;
+  const points = useRewardsSummary();
   const feedPosts = getMockFeedPosts();
   const userPosts = feedPosts.filter((p) => p.authorId === user.id);
   const savedPosts = feedPosts.filter((p) => p.saved);
@@ -79,6 +81,21 @@ export default function ProfilePage() {
                 {badge}
               </Badge>
             ))}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <Link
+              href="/rewards"
+              className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--muted)]"
+            >
+              <Star className="h-4 w-4 text-[var(--accent)]" />
+              <span>
+                Level {points.level} · {points.balance.toLocaleString()} pts
+              </span>
+            </Link>
+            <span className="flex items-center gap-2 rounded-xl border border-orange-500/20 bg-orange-500/5 px-3 py-2 text-sm">
+              <Flame className="h-4 w-4 text-orange-500" />
+              {points.streak}-day streak
+            </span>
           </div>
         </div>
       </div>

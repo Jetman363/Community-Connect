@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { asInputJson } from "@/lib/prisma-json";
 import type { ActionResult, AutomationAction, TriggerContext } from "./types";
 
 async function executeAction(
@@ -86,7 +87,7 @@ export async function evaluateAutomations(ctx: TriggerContext): Promise<ActionRe
     const conditions = rule.conditions as Record<string, unknown> | null;
     if (!matchesConditions(conditions, ctx.payload)) continue;
 
-    const actions = rule.actions as AutomationAction[];
+    const actions = rule.actions as unknown as AutomationAction[];
     const runResults: ActionResult[] = [];
 
     for (const action of actions) {
@@ -97,8 +98,8 @@ export async function evaluateAutomations(ctx: TriggerContext): Promise<ActionRe
       data: {
         automationId: rule.id,
         status: runResults.every((r) => r.success) ? "SUCCESS" : "FAILED",
-        triggerData: ctx.payload,
-        result: runResults,
+        triggerData: asInputJson(ctx.payload),
+        result: asInputJson(runResults),
       },
     });
 
@@ -124,7 +125,7 @@ export async function testAutomationRule(
     communityId: rule.communityId,
   };
 
-  const actions = rule.actions as AutomationAction[];
+  const actions = rule.actions as unknown as AutomationAction[];
   const results: ActionResult[] = [];
   for (const action of actions) {
     results.push(await executeAction(action, ctx));

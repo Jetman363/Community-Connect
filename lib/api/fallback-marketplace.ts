@@ -1,5 +1,6 @@
 import { mockListings } from "@/lib/mock-data/marketplace";
 import { mockBusinesses } from "@/lib/mock-data/businesses";
+import { businessCoverPhoto } from "@/lib/images/community-photos";
 import type {
   MarketplaceListingDto,
   BusinessDto,
@@ -72,7 +73,7 @@ export function getMockBusinessesDto(): BusinessDto[] {
     verificationBadges: b.verified ? ["community"] : [],
     imageUrl: b.imageUrl ?? null,
     logoUrl: b.imageUrl ?? null,
-    coverPhotoUrl: null,
+    coverPhotoUrl: b.imageUrl ?? businessCoverPhoto(b.category),
     hours: { summary: b.hours },
     socialLinks: null,
     serviceAreas: [],

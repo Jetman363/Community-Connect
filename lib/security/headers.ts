@@ -4,9 +4,18 @@ export interface SecurityHeaderOptions {
 
 export function buildSecurityHeaders(opts: SecurityHeaderOptions = {}): Record<string, string> {
   const nonce = opts.nonce ?? "";
+  const isProduction =
+    process.env.NODE_ENV === "production" || process.env.APP_ENV === "production";
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    ...(isProduction ? [] : ["'unsafe-eval'"]),
+    ...(nonce ? [`'nonce-${nonce}'`] : []),
+    "https://maps.googleapis.com",
+  ].join(" ");
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${nonce ? ` 'nonce-${nonce}'` : ""} https://maps.googleapis.com`,
+    `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
@@ -25,7 +34,7 @@ export function buildSecurityHeaders(opts: SecurityHeaderOptions = {}): Record<s
     "X-DNS-Prefetch-Control": "on",
   };
 
-  if (process.env.NODE_ENV === "production" || process.env.APP_ENV === "production") {
+  if (isProduction) {
     headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload";
   }
 

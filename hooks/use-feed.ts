@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FeedPost } from "@/types/feed";
 import { fetchFeed, createPost as apiCreatePost, ApiClientError } from "@/lib/api/client";
+import { rankFeedPosts } from "@/lib/ai/feed-ranking";
 import { SOCKET_EVENTS } from "@/lib/realtime/events";
 import { useSocket } from "@/hooks/use-socket";
 
@@ -45,7 +46,8 @@ export function useFeed(options: { category?: string; sort?: "latest" | "trendin
           cursor: append ? (nextCursor ?? cursor ?? undefined) : undefined,
         });
 
-        setPosts((prev) => (append ? [...prev, ...res.items] : res.items));
+        const ranked = rankFeedPosts(res.items, { sort: options.sort ?? "latest" });
+        setPosts((prev) => (append ? [...prev, ...ranked] : ranked));
         setCursor(res.nextCursor);
         setHasMore(res.hasMore);
         setSource(res.source ?? "db");

@@ -1,14 +1,25 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { jsonError, jsonOk } from "@/lib/api/response";
 import { getPersonalizationProfile, updateInterests } from "@/lib/api/services/personalization";
+import { ONBOARDING_COOKIE, ONBOARDING_MAX_AGE } from "@/lib/auth/onboarding";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (!("payload" in auth)) return auth;
   const data = await getPersonalizationProfile(auth.payload.sub);
-  return jsonOk(data);
+  const res = NextResponse.json(data);
+  if (data.source === "db" && data.interests.length > 0) {
+    res.cookies.set(ONBOARDING_COOKIE, "1", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: ONBOARDING_MAX_AGE,
+    });
+  }
+  return res;
 }
 
 const patchSchema = z.object({

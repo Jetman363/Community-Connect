@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Calendar, MapPin, Users, Ticket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CommunityImage } from "@/components/ui/community-image";
+import { eventCoverPhoto } from "@/lib/images/community-photos";
 import type { MockEvent } from "@/lib/mock-data/events";
 import { cn } from "@/lib/utils";
 
@@ -23,18 +25,36 @@ export function EventCard({
     day: "numeric",
   });
   const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const cover = event.imageUrl ?? eventCoverPhoto(event.category);
 
   return (
     <motion.article
       whileHover={{ y: -2 }}
       className={cn(
         "overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm transition-shadow hover:shadow-md",
-        compact ? "flex gap-4" : ""
+        compact ? "flex gap-0" : ""
       )}
     >
-      {event.imageUrl && !compact && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={event.imageUrl} alt="" className="h-40 w-full object-cover" />
+      {compact ? (
+        <div className="relative h-auto w-24 shrink-0 self-stretch sm:w-28">
+          <CommunityImage
+            src={cover}
+            alt={`${event.title} event photo`}
+            fill
+            sizes="112px"
+            className="object-cover"
+          />
+        </div>
+      ) : (
+        <div className="relative h-40 w-full">
+          <CommunityImage
+            src={cover}
+            alt={`${event.title} event photo`}
+            fill
+            sizes="(max-width: 640px) 100vw, 400px"
+            className="object-cover"
+          />
+        </div>
       )}
       <div className={cn("p-4", compact && "flex-1")}>
         <div className="flex items-start justify-between gap-2">

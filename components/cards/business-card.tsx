@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Star, MapPin, Clock, Phone, CheckCircle2, Bookmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CommunityImage } from "@/components/ui/community-image";
+import { businessCoverPhoto } from "@/lib/images/community-photos";
 import type { BusinessDto } from "@/types/marketplace";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +32,11 @@ export function BusinessCard({
   onToggleFavorite?: (id: string) => void;
   compact?: boolean;
 }) {
-  const image = business.logoUrl ?? business.imageUrl ?? business.coverPhotoUrl;
+  const image =
+    business.coverPhotoUrl ??
+    business.logoUrl ??
+    business.imageUrl ??
+    businessCoverPhoto(business.category);
   const dist = distanceLabel(business.distanceM);
 
   return (
@@ -39,17 +45,24 @@ export function BusinessCard({
       onClick={onSelect}
       className={cn(
         "cursor-pointer overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm transition-shadow hover:shadow-md",
-        compact ? "flex gap-4 p-4" : ""
+        compact && "flex gap-4 p-4"
       )}
     >
-      {image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+      <div
+        className={cn(
+          "relative shrink-0 overflow-hidden",
+          compact ? "h-20 w-20 rounded-xl" : "h-36 w-full"
+        )}
+      >
+        <CommunityImage
           src={image}
-          alt=""
-          className={cn(compact ? "h-20 w-20 rounded-xl object-cover" : "h-36 w-full object-cover")}
+          alt={`${business.name} storefront`}
+          fill
+          sizes={compact ? "80px" : "(max-width: 640px) 100vw, 400px"}
+          className="object-cover"
+          rounded={compact ? "xl" : "none"}
         />
-      )}
+      </div>
       <div className={cn("p-4", compact && "flex-1 p-0")}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">

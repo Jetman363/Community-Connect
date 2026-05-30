@@ -1,3 +1,5 @@
+import { communityPhotos } from "@/lib/images/community-photos";
+
 export type EventCategory = "community" | "safety" | "market" | "sports" | "arts" | "family";
 
 export interface MockEvent {
@@ -34,7 +36,7 @@ export const mockEvents: MockEvent[] = [
     rsvpCount: 124,
     capacity: 500,
     organizer: "Oak Hills Chamber",
-    imageUrl: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80",
+    imageUrl: communityPhotos.events.farmersMarket,
     rsvpStatus: "going",
   },
   {
@@ -51,6 +53,7 @@ export const mockEvents: MockEvent[] = [
     rsvpCount: 38,
     capacity: 80,
     organizer: "Neighborhood Watch",
+    imageUrl: communityPhotos.events.neighborhoodWatch,
     rsvpStatus: "interested",
   },
   {
@@ -68,7 +71,7 @@ export const mockEvents: MockEvent[] = [
     capacity: 400,
     ticketPrice: 0,
     organizer: "Oak Hills HOA",
-    imageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80",
+    imageUrl: communityPhotos.events.blockParty,
     rsvpStatus: "none",
   },
   {
@@ -86,6 +89,7 @@ export const mockEvents: MockEvent[] = [
     capacity: 200,
     ticketPrice: 5,
     organizer: "Oak Hills Youth League",
+    imageUrl: communityPhotos.events.youthSoccer,
     rsvpStatus: "none",
   },
   {
@@ -102,7 +106,7 @@ export const mockEvents: MockEvent[] = [
     rsvpCount: 67,
     capacity: 150,
     organizer: "Oak Hills Arts Council",
-    imageUrl: "https://images.unsplash.com/photo-1460661419341-fba6b3120b67?w=800&q=80",
+    imageUrl: communityPhotos.events.artWalk,
     rsvpStatus: "interested",
   },
 ];

@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { PageHeroBanner } from "@/components/ui/page-hero-banner";
+import { communityPhotos } from "@/lib/images/community-photos";
 import { FileText, Vote, Megaphone, Download, Calendar, Wrench, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { apiFetch } from "@/lib/api/client";
@@ -85,6 +87,13 @@ export default function HoaPage() {
       <PageHeader
         title="HOA Portal"
         description="Announcements, documents, voting, meetings, rules, and maintenance"
+      />
+
+      <PageHeroBanner
+        src={communityPhotos.hero.hoa}
+        alt="Community center building"
+        title="Oak Hills HOA"
+        description="Governance, documents, and resident services in one place"
       />
 
       <div className="grid gap-6 lg:grid-cols-2">

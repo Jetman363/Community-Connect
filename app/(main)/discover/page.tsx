@@ -5,6 +5,7 @@ import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { DiscoverCard } from "@/components/discover/discover-card";
 import { useDiscoverFeed } from "@/hooks/use-discover-feed";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,7 +21,7 @@ const filters = [
 
 export default function DiscoverPage() {
   const [filter, setFilter] = useState("all");
-  const { items, loading, hasMore, loadMore } = useDiscoverFeed(
+  const { items, loading, hasMore, loadMore, refresh } = useDiscoverFeed(
     filter === "all" ? undefined : filter
   );
   const { toast } = useToast();
@@ -47,6 +48,7 @@ export default function DiscoverPage() {
 
       <FilterChips options={filters} value={filter} onChange={setFilter} className="mb-6" />
 
+      <PullToRefresh onRefresh={async () => refresh()}>
       <div className="flex flex-col items-center gap-6 md:flex-row md:flex-wrap md:justify-center">
         {items.map((item, i) => (
           <div key={item.id} ref={i === items.length - 1 ? lastRef : undefined}>
@@ -65,6 +67,7 @@ export default function DiscoverPage() {
           <Skeleton className="hidden h-[420px] w-[280px] rounded-2xl md:block" />
         </div>
       )}
+      </PullToRefresh>
     </PageTransition>
   );
 }

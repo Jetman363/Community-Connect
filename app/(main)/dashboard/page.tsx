@@ -17,6 +17,7 @@ import { DailyCheckInButton } from "@/components/engagement/daily-check-in-butto
 import { QuickActionFab } from "@/components/engagement/quick-action-fab";
 import { MarketplaceHighlights } from "@/components/marketplace/marketplace-highlights";
 import { CommunityFeedSection } from "@/components/dashboard/community-feed-section";
+import { AiHomeSections } from "@/components/dashboard/ai-home-sections";
 import { Avatar } from "@/components/ui/avatar";
 import { RelativeTime } from "@/components/ui/relative-time";
 import { apiFetch } from "@/lib/api/client";
@@ -60,6 +61,8 @@ export default function DashboardPage() {
       </div>
 
       <MarketplaceHighlights />
+
+      <AiHomeSections />
 
       <CommunityFeedSection />
 

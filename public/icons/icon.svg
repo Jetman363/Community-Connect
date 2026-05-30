@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Community Connect">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <circle cx="256" cy="200" r="72" fill="#fff" opacity="0.95"/>
+  <path fill="#fff" opacity="0.9" d="M128 360c0-56 57-96 128-96s128 40 128 96v24H128v-24z"/>
+  <circle cx="360" cy="148" r="28" fill="#93c5fd"/>
+  <path fill="#fff" d="M200 320h48l24 56h-48l-24-56zm72 0h56l-16 56h-48l8-56z"/>
+  <path fill="#fbbf24" d="M380 300l20 12-8 20-20-12 8-20z"/>
+</svg>

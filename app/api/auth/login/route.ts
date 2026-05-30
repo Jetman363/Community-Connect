@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signToken } from "@/lib/auth";
-import { authenticateDemoUser, isDemoEmail } from "@/lib/auth/demo-users";
+import { authenticateDemoUser } from "@/lib/auth/demo-users";
 import { loginSchema } from "@/lib/validations";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { setAuthCookie } from "@/lib/api-auth";
@@ -47,6 +47,11 @@ export async function POST(req: NextRequest) {
 
   const { email, password } = parsed.data;
 
+  const demoUser = authenticateDemoUser(email, password);
+  if (demoUser) {
+    return loginResponse(demoUser);
+  }
+
   try {
     const user = await withDbTimeout(
       prisma.user.findUnique({
@@ -67,17 +72,11 @@ export async function POST(req: NextRequest) {
       displayName: user.profile?.displayName,
     });
   } catch {
-    const demoUser = authenticateDemoUser(email, password);
-    if (demoUser) {
-      return loginResponse(demoUser);
-    }
-
-    if (isDemoEmail(email)) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-    }
-
     return NextResponse.json(
-      { error: "Database unavailable. Copy .env.example to .env and run migrations, or use demo credentials in dev." },
+      {
+        error:
+          "Database unavailable. Copy .env.example to .env and run migrations, or use demo credentials in dev.",
+      },
       { status: 503 }
     );
   }

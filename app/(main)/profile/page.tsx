@@ -82,7 +82,7 @@ export default function ProfilePage() {
         <TabsContent value="activity">
           <div className="space-y-4 max-w-2xl">
             {userPosts.length > 0 ? (
-              userPosts.map((post) => <FeedPostCard key={post.id} post={post} />)
+              userPosts.map((post) => <FeedPostCard key={post.id} post={post as never} />)
             ) : (
               <p className="py-8 text-center text-[var(--muted-foreground)]">No posts yet</p>
             )}
@@ -92,7 +92,7 @@ export default function ProfilePage() {
         <TabsContent value="saved">
           <div className="space-y-4 max-w-2xl">
             {savedPosts.map((post) => (
-              <FeedPostCard key={post.id} post={post} />
+              <FeedPostCard key={post.id} post={post as never} />
             ))}
           </div>
         </TabsContent>

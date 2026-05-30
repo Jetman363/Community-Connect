@@ -27,7 +27,8 @@ export function FeedPostCard({ post }: { post: MockPost }) {
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes);
   const [saved, setSaved] = useState(post.saved);
-  const [following, setFollowing] = useState(post.following);
+  const [following, setFollowing] = useState(post.following ?? false);
+  const shares = "shares" in post && post.shares != null ? post.shares : 0;
 
   const handleLike = () => {
     setLiked(!liked);
@@ -48,7 +49,7 @@ export function FeedPostCard({ post }: { post: MockPost }) {
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{author?.displayName}</span>
                 <Badge variant="default" className="capitalize text-[10px]">
-                  {post.category.replace("-", " ")}
+                  {String(post.category).replace(/[-_]/g, " ")}
                 </Badge>
               </div>
               <span className="text-xs text-[var(--muted-foreground)]">
@@ -119,7 +120,7 @@ export function FeedPostCard({ post }: { post: MockPost }) {
             activeClass="text-[var(--emergency)]"
           />
           <ActionBtn icon={MessageCircle} label={post.comments.toString()} />
-          <ActionBtn icon={Share2} label={post.shares.toString()} />
+          <ActionBtn icon={Share2} label={shares.toString()} />
         </div>
         <div className="flex items-center gap-1">
           <ActionBtn

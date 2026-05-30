@@ -14,13 +14,15 @@ const suggestedPrompts = [
   "Upcoming events this week",
 ];
 
-const quickReplies = [
-  { role: "assistant" as const, text: "Hi Alex! I'm your Community Connect assistant. How can I help you today?" },
+type ChatMessage = { role: "assistant" | "user"; text: string };
+
+const quickReplies: ChatMessage[] = [
+  { role: "assistant", text: "Hi Alex! I'm your Community Connect assistant. How can I help you today?" },
 ];
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState(quickReplies);
+  const [messages, setMessages] = useState<ChatMessage[]>(quickReplies);
   const [input, setInput] = useState("");
 
   const send = (text: string) => {

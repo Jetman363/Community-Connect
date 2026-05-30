@@ -16,6 +16,7 @@ import { NewsCard } from "@/components/news/news-card";
 import { DailyCheckInButton } from "@/components/engagement/daily-check-in-button";
 import { QuickActionFab } from "@/components/engagement/quick-action-fab";
 import { FeedPostCard } from "@/components/cards/feed-post";
+import { MarketplaceHighlights } from "@/components/marketplace/marketplace-highlights";
 import { Avatar } from "@/components/ui/avatar";
 import { RelativeTime } from "@/components/ui/relative-time";
 import { apiFetch } from "@/lib/api/client";
@@ -31,7 +32,6 @@ export default function DashboardPage() {
   const [recommendations, setRecommendations] = useState<LifestyleRecommendation[]>([]);
   const [trending, setTrending] = useState<TrendingItemDto[]>(mockTrendingItems);
   const trendingPosts = getMockFeedPosts().slice(0, 3);
-
   useEffect(() => {
     void Promise.all([
       apiFetch<{ items: LifestyleRecommendation[] }>("/api/recommendations/lifestyle").then(
@@ -60,6 +60,18 @@ export default function DashboardPage() {
         </div>
         <CompactAlertsPanel />
       </div>
+
+      <MarketplaceHighlights />
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-semibold">Trending Community Posts</h2>
+        <div className="space-y-4">
+          {trendingPosts.map((post) => (
+            <FeedPostCard key={post.id} post={post as never} />
+          ))}
+        </div>
+      </section>
+
 
       <HorizontalScrollSection title="Today's Events" href="/events">
         <EventsCarousel inline />
@@ -133,15 +145,6 @@ export default function DashboardPage() {
           <FamilyActivityCard key={a.id} activity={a} />
         ))}
       </HorizontalScrollSection>
-
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Trending Community Posts</h2>
-        <div className="space-y-4">
-          {trendingPosts.map((post) => (
-            <FeedPostCard key={post.id} post={post as never} />
-          ))}
-        </div>
-      </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-lg font-semibold">Nearby Businesses</h2>

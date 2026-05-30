@@ -77,7 +77,7 @@ export interface LeaderboardEntry {
 
 export interface DiscoverFeedItem {
   id: string;
-  type: "post" | "deal" | "event" | "group" | "news" | "challenge";
+  type: "post" | "deal" | "event" | "group" | "news" | "challenge" | "marketplace";
   title: string;
   subtitle?: string;
   imageUrl?: string;
@@ -90,7 +90,7 @@ export interface LifestyleRecommendation {
   id: string;
   title: string;
   description: string;
-  category: "dining" | "events" | "outdoors" | "family" | "deals" | "social";
+  category: "dining" | "events" | "outdoors" | "family" | "deals" | "social" | "marketplace";
   imageUrl?: string;
   href?: string;
   reason: string;

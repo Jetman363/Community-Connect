@@ -24,6 +24,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePersonalization } from "@/hooks/use-personalization";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -120,6 +121,10 @@ export default function SettingsPage() {
             <ToggleRow label="Marketplace messages" />
             <ToggleRow label="Email digest" defaultChecked />
           </div>
+        </SettingsSection>
+
+        <SettingsSection icon={Palette} title="Interests" description="Personalize your feed and recommendations">
+          <InterestTags />
         </SettingsSection>
 
         <SettingsSection icon={Palette} title="Appearance" description="Theme and display preferences">
@@ -243,6 +248,62 @@ function ConnectedRow({ provider, connected }: { provider: string; connected?: b
       <Button size="sm" variant={connected ? "secondary" : "outline"}>
         {connected ? "Connected" : "Connect"}
       </Button>
+    </div>
+  );
+}
+
+const INTEREST_OPTIONS = [
+  "events",
+  "deals",
+  "family",
+  "food",
+  "outdoors",
+  "social",
+  "sports",
+  "news",
+  "volunteering",
+];
+
+function InterestTags() {
+  const { profile, updateInterests } = usePersonalization();
+  const { toast } = useToast();
+  const [selected, setSelected] = useState<string[]>(profile.interests);
+
+  useEffect(() => {
+    setSelected(profile.interests);
+  }, [profile.interests]);
+
+  function toggle(topic: string) {
+    setSelected((prev) =>
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+    );
+  }
+
+  async function save() {
+    await updateInterests(selected);
+    toast("Interests saved — feed will update", "success");
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {INTEREST_OPTIONS.map((topic) => (
+          <button
+            key={topic}
+            type="button"
+            onClick={() => toggle(topic)}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm capitalize transition-colors",
+              selected.includes(topic)
+                ? "bg-[var(--accent)] text-white"
+                : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            {topic}
+          </button>
+        ))}
+      </div>
+      <Button onClick={() => void save()}>Save Interests</Button>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyToken, AUTH_COOKIE } from "@/lib/auth";
+import { AUTH_COOKIE } from "@/lib/auth";
+import { verifyTokenEdge } from "@/lib/auth/jwt-edge";
 import { adminRoutes, protectedRoutes } from "@/config/routes";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isProtected = protectedRoutes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
@@ -12,9 +13,13 @@ export function middleware(request: NextRequest) {
   if (!isProtected) return NextResponse.next();
 
   const token = request.cookies.get(AUTH_COOKIE)?.value;
-  if (!token || !verifyToken(token)) {
+  const payload = token ? await verifyTokenEdge(token) : null;
+  if (!payload) {
     const login = new URL("/login", request.url);
     login.searchParams.set("redirect", pathname);
+    if (request.cookies.has(AUTH_COOKIE)) {
+      login.searchParams.set("auth", "failed");
+    }
     return NextResponse.redirect(login);
   }
 
@@ -22,7 +27,6 @@ export function middleware(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
   if (isAdminRoute) {
-    const payload = verifyToken(token)!;
     if (payload.role !== "ADMIN" && payload.role !== "MODERATOR") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }

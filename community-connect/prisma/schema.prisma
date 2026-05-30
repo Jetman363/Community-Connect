@@ -35,9 +35,39 @@ enum PostCategory {
 
 enum AlertSeverity {
   INFO
-  ADVISORY
-  WARNING
-  EMERGENCY
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+enum AlertCategory {
+  CRIME
+  WEATHER
+  TRAFFIC
+  MISSING
+  HOA
+  COMMUNITY
+  FIRE
+  MEDICAL
+  OTHER
+}
+
+enum ReportSeverity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+enum IncidentCategory {
+  HAZARD
+  CRIME
+  MAINTENANCE
+  NOISE
+  TRAFFIC
+  ENVIRONMENTAL
+  OTHER
 }
 
 enum ReportStatus {
@@ -48,6 +78,28 @@ enum ReportStatus {
   CLOSED
 }
 
+enum GeofenceType {
+  HOA
+  EMERGENCY
+  WATCH
+}
+
+enum MapLayerType {
+  ALERTS
+  REPORTS
+  EVENTS
+  BUSINESSES
+  MARKETPLACE
+  JOBS
+  HEATMAP
+}
+
+enum WatchAreaType {
+  HOME
+  WORK
+  CUSTOM
+}
+
 enum ListingType {
   FOR_SALE
   WANTED
@@ -55,12 +107,83 @@ enum ListingType {
   SERVICE
 }
 
+enum MarketplaceCategory {
+  BUY_SELL
+  SERVICES
+  JOBS
+  GIG
+  CLASSIFIEDS
+  HOUSING
+  OTHER
+}
+
 enum ListingStatus {
   DRAFT
   ACTIVE
+  PENDING
   SOLD
+  CLOSED
   EXPIRED
+  FLAGGED
   REMOVED
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  GIG
+  VOLUNTEER
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  FILLED
+  CLOSED
+  EXPIRED
+  FLAGGED
+}
+
+enum InquiryStatus {
+  NEW
+  READ
+  REPLIED
+  CLOSED
+  SPAM
+}
+
+enum FavoriteTargetType {
+  LISTING
+  BUSINESS
+  JOB
+  SEARCH
+}
+
+enum VerificationType {
+  IDENTITY
+  LICENSE
+  COMMUNITY
+  PUBLIC_SAFETY
+  HOA
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReviewModerationStatus {
+  PENDING
+  APPROVED
+  FLAGGED
+  REMOVED
+}
+
+enum PromotionTargetType {
+  LISTING
+  BUSINESS
 }
 
 enum RsvpStatus {
@@ -165,12 +288,14 @@ model Community {
   events           Event[]
   businesses       Business[]
   listings         MarketplaceListing[]
+  jobListings      JobListing[]
   reports          Report[]
   messages         Message[]
   hoaDocuments     HoaDocument[]
   hoaAnnouncements HOAAnnouncement[]
   votes            Vote[]
   mediaUploads     MediaUpload[]
+  geofenceZones    GeofenceZone[]
 
   @@index([active])
 }
@@ -221,9 +346,22 @@ model User {
   marketplace          MarketplaceListing[]
   businesses           Business[]
   reviews              Review[]
+  reviewHelpfulVotes   ReviewHelpfulVote[]
+  reviewReports        ReviewReport[]
+  inquiries            Inquiry[]
+  favorites            Favorite[]
+  jobListings          JobListing[]
   sentMessages         Message[]            @relation("SentMessages")
   receivedMessages     Message[]            @relation("ReceivedMessages")
   mediaUploads         MediaUpload[]
+  createdAlerts        SafetyAlert[]        @relation("AlertCreator")
+  assignedReports      Report[]             @relation("ReportAssignee")
+  alertAcks            AlertAcknowledgment[]
+  alertBookmarks       AlertBookmark[]
+  alertSubscriptions   AlertSubscription[]
+  watchAreas           WatchArea[]
+  locationHistory      LocationHistory[]
+  mapLayerPreference   MapLayerPreference?
 
   @@index([role])
 }
@@ -389,42 +527,160 @@ model UserMute {
 // ─── Safety & Reports ────────────────────────────────────────────────────────
 
 model SafetyAlert {
-  id          String        @id @default(cuid())
+  id          String         @id @default(cuid())
   communityId String
-  community   Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  community   Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?          @relation("AlertCreator", fields: [createdById], references: [id], onDelete: SetNull)
   title       String
   description String
-  severity    AlertSeverity @default(INFO)
+  category    AlertCategory  @default(OTHER)
+  severity    AlertSeverity  @default(INFO)
   lat         Float?
   lng         Float?
-  active      Boolean       @default(true)
-  source      String? // police, fire, weather
-  createdAt   DateTime      @default(now())
+  radiusM     Float? // meters — geofence broadcast radius
+  locationLabel String?
+  active      Boolean        @default(true)
+  source      String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   expiresAt   DateTime?
 
+  acknowledgments AlertAcknowledgment[]
+  bookmarks       AlertBookmark[]
+
   @@index([communityId, active, createdAt(sort: Desc)])
+  @@index([communityId, category, createdAt(sort: Desc)])
   @@index([severity])
+  @@index([lat, lng])
+  @@index([expiresAt])
 }
 
 model Report {
+  id                String           @id @default(cuid())
+  communityId       String
+  community         Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  reporterId        String
+  reporter          User             @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  assignedToId      String?
+  assignedTo        User?            @relation("ReportAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  title             String
+  description       String
+  category          IncidentCategory @default(OTHER)
+  severity          ReportSeverity   @default(MODERATE)
+  suggestedCategory IncidentCategory?
+  status            ReportStatus     @default(SUBMITTED)
+  anonymous         Boolean          @default(false)
+  lat               Float?
+  lng               Float?
+  locationLabel     String?
+  mediaUrls         String[]         @default([])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([communityId, status, createdAt(sort: Desc)])
+  @@index([communityId, category])
+  @@index([reporterId])
+  @@index([assignedToId])
+  @@index([lat, lng])
+}
+
+model GeofenceZone {
   id          String       @id @default(cuid())
   communityId String
   community   Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  reporterId  String
-  reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
-  title       String
-  description String
-  category    String?
-  aiCategory  String?
-  status      ReportStatus @default(SUBMITTED)
-  lat         Float?
-  lng         Float?
-  mediaUrls   String[]     @default([])
+  name        String
+  type        GeofenceType @default(WATCH)
+  centerLat   Float?
+  centerLng   Float?
+  radiusM     Float?
+  polygon     Json? // GeoJSON polygon coordinates
+  active      Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  @@index([communityId, status])
-  @@index([reporterId])
+  subscriptions AlertSubscription[]
+
+  @@index([communityId, active])
+  @@index([centerLat, centerLng])
+}
+
+model AlertSubscription {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zoneId          String?
+  zone            GeofenceZone? @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  centerLat       Float?
+  centerLng       Float?
+  radiusM         Float?   @default(1609) // ~1 mile
+  notifyEmergency Boolean  @default(true)
+  notifyModerate  Boolean  @default(true)
+  notifyInfo      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, zoneId])
+  @@index([userId])
+  @@index([zoneId])
+}
+
+model AlertAcknowledgment {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertId   String
+  alert     SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, alertId])
+  @@index([alertId])
+}
+
+model AlertBookmark {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertId   String
+  alert     SafetyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, alertId])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model WatchArea {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  type      WatchAreaType @default(CUSTOM)
+  centerLat Float
+  centerLng Float
+  radiusM   Float         @default(804) // ~0.5 mile
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model LocationHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  accuracy  Float?
+  recordedAt DateTime @default(now())
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model MapLayerPreference {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  layers    MapLayerType[] @default([ALERTS, EVENTS, BUSINESSES])
+  updatedAt DateTime       @updatedAt
 }
 
 // ─── Events ──────────────────────────────────────────────────────────────────
@@ -462,63 +718,263 @@ model RSVP {
 // ─── Business ────────────────────────────────────────────────────────────────
 
 model Business {
-  id          String    @id @default(cuid())
-  communityId String
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  ownerId     String?
-  owner       User?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  name        String
-  description String?
-  category    String
-  address     String?
-  phone       String?
-  website     String?
-  lat         Float?
-  lng         Float?
-  rating      Float     @default(0)
-  verified    Boolean   @default(false)
-  imageUrl    String?
-  createdAt   DateTime  @default(now())
-  reviews     Review[]
+  id                 String    @id @default(cuid())
+  communityId        String
+  community          Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  ownerId            String?
+  owner              User?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  name               String
+  description        String?
+  category           String
+  categories         String[]  @default([])
+  address            String?
+  phone              String?
+  website            String?
+  lat                Float?
+  lng                Float?
+  rating             Float     @default(0)
+  reviewCount        Int       @default(0)
+  verified           Boolean   @default(false)
+  verificationBadges String[]  @default([])
+  imageUrl           String?
+  logoUrl            String?
+  coverPhotoUrl      String?
+  hours              Json?
+  socialLinks        Json?
+  serviceAreas       String[]  @default([])
+  pricingRange       String?
+  certifications     String[]  @default([])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  reviews               Review[]
+  services              Service[]
+  inquiries             Inquiry[]
+  verificationRequests  VerificationRequest[]
+  promotions            Promotion[]
+  analytics             BusinessAnalytics?
 
   @@index([communityId, category])
+  @@index([communityId, verified])
   @@index([ownerId])
+  @@index([lat, lng])
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  businessId String
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  authorId   String
-  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  rating     Int
-  comment    String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String                 @id @default(cuid())
+  businessId       String
+  business         Business               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  authorId         String
+  author           User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  rating           Int
+  categoryRatings  Json?
+  comment          String?
+  photos           String[]               @default([])
+  helpfulCount     Int                    @default(0)
+  verifiedCustomer Boolean                @default(false)
+  ownerResponse    String?
+  ownerRespondedAt DateTime?
+  moderationStatus ReviewModerationStatus @default(APPROVED)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  helpfulVotes ReviewHelpfulVote[]
+  reports      ReviewReport[]
 
   @@unique([businessId, authorId])
-  @@index([businessId])
+  @@index([businessId, moderationStatus])
+  @@index([authorId])
+}
+
+model ReviewHelpfulVote {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+}
+
+model ReviewReport {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  category        String
+  priceFrom       Float?
+  priceTo         Float?
+  availability    String?
+  serviceRadiusM  Float?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([businessId, active])
 }
 
 // ─── Marketplace ─────────────────────────────────────────────────────────────
 
 model MarketplaceListing {
-  id          String        @id @default(cuid())
+  id           String              @id @default(cuid())
+  communityId  String
+  community    Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  sellerId     String
+  seller       User                @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  price        Float?
+  negotiable   Boolean             @default(false)
+  type         ListingType         @default(FOR_SALE)
+  category     MarketplaceCategory @default(BUY_SELL)
+  status       ListingStatus       @default(ACTIVE)
+  imageUrl     String?
+  imageGallery Json?
+  videoUrl     String?
+  lat          Float?
+  lng          Float?
+  locationLabel String?
+  featured     Boolean             @default(false)
+  promoted     Boolean             @default(false)
+  viewCount    Int                 @default(0)
+  expiresAt    DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  inquiries Inquiry[]
+  promotions Promotion[]
+
+  @@index([communityId, status, createdAt(sort: Desc)])
+  @@index([communityId, category, status])
+  @@index([communityId, featured, promoted])
+  @@index([sellerId])
+  @@index([lat, lng])
+}
+
+model JobListing {
+  id          String     @id @default(cuid())
   communityId String
-  community   Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  sellerId    String
-  seller      User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  posterId    String
+  poster      User       @relation(fields: [posterId], references: [id], onDelete: Cascade)
+  businessId  String?
   title       String
   description String?
-  price       Float?
-  type        ListingType   @default(FOR_SALE)
-  status      ListingStatus @default(ACTIVE)
-  imageUrl    String?
+  jobType     JobType    @default(FULL_TIME)
+  status      JobStatus  @default(ACTIVE)
+  salaryMin   Float?
+  salaryMax   Float?
+  salaryUnit  String?
+  skills      String[]   @default([])
+  location    String?
+  lat         Float?
+  lng         Float?
+  remote      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  expiresAt   DateTime?
+
+  inquiries Inquiry[]
+
+  @@index([communityId, status, createdAt(sort: Desc)])
+  @@index([posterId])
+  @@index([jobType])
+}
+
+model Inquiry {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId  String?
+  business    Business?     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  listingId   String?
+  listing     MarketplaceListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  jobId       String?
+  job         JobListing?   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  message     String
+  quoteRequest Boolean      @default(false)
+  contactEmail String?
+  contactPhone String?
+  status      InquiryStatus @default(NEW)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  @@index([communityId, status, createdAt(sort: Desc)])
-  @@index([sellerId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([businessId, status])
+  @@index([listingId])
+}
+
+model Favorite {
+  id         String             @id @default(cuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType FavoriteTargetType
+  targetId   String
+  label      String?
+  createdAt  DateTime           @default(now())
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, targetType])
+}
+
+model VerificationRequest {
+  id         String             @id @default(cuid())
+  businessId String
+  business   Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  type       VerificationType
+  status     VerificationStatus @default(PENDING)
+  documents  String[]           @default([])
+  adminNotes String?
+  reviewedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([businessId])
+}
+
+model Promotion {
+  id         String              @id @default(cuid())
+  targetType PromotionTargetType
+  listingId  String?
+  listing    MarketplaceListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  businessId String?
+  business   Business?           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  startsAt   DateTime            @default(now())
+  endsAt     DateTime?
+  active     Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+
+  @@index([active, endsAt])
+  @@index([listingId])
+  @@index([businessId])
+}
+
+model BusinessAnalytics {
+  id            String   @id @default(cuid())
+  businessId    String   @unique
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  viewCount     Int      @default(0)
+  inquiryCount  Int      @default(0)
+  listingViews  Int      @default(0)
+  updatedAt     DateTime @updatedAt
 }
 
 // ─── Messaging ───────────────────────────────────────────────────────────────

@@ -53,7 +53,7 @@ export default function MarketplacePage() {
           <MarketplaceListingCard
             key={listing.id}
             listing={listing}
-            onClick={() => setSelected(listing)}
+            onSelect={() => setSelected(listing)}
           />
         ))}
       </div>

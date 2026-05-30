@@ -28,7 +28,7 @@ export function getMockFeedPosts(): FeedPost[] {
           question: p.poll.question,
           options: p.poll.options,
           totalVotes: p.poll.totalVotes,
-          votedOptionId: p.poll.votedOptionId,
+          votedOptionId: "votedOptionId" in p.poll ? (p.poll as { votedOptionId?: string }).votedOptionId : undefined,
         }
       : undefined,
     likes: p.likes,

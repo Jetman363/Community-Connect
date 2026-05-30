@@ -7,7 +7,7 @@ import { FeedPostCard } from "@/components/cards/feed-post";
 import { PostComposer } from "@/components/feed/post-composer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeed } from "@/hooks/use-feed";
-import { postCategories } from "@/lib/mock-data/posts";
+import { postCategories, type MockPost } from "@/lib/mock-data/posts";
 
 export default function FeedPage() {
   const [category, setCategory] = useState<string>("all");
@@ -69,7 +69,7 @@ export default function FeedPage() {
           </div>
         ) : (
           posts.map((post) => (
-            <FeedPostCard key={post.id} post={post} onUpdate={updatePostLocal} />
+            <FeedPostCard key={post.id} post={post as unknown as MockPost} />
           ))
         )}
 

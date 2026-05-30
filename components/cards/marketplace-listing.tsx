@@ -113,6 +113,11 @@ export function MarketplaceListingCard({
             {listing.description}
           </p>
         )}
+        {listing.condition && (
+          <span className="mt-1 inline-block text-xs text-[var(--muted-foreground)]">
+            Condition: {listing.condition}
+          </span>
+        )}
         <div className="mt-3 flex items-center justify-between">
           <span className="text-lg font-bold">{priceLabel(listing)}</span>
           <span className="text-xs text-[var(--muted-foreground)]">
@@ -130,7 +135,12 @@ export function MarketplaceListingCard({
           </span>
         </div>
         <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-          {listing.seller.displayName} · <RelativeTime date={listing.createdAt} />
+          {listing.seller.displayName}
+          {listing.seller.reputationScore != null && (
+            <span> · ★ {listing.seller.reputationScore.toFixed(1)}</span>
+          )}
+          {" · "}
+          <RelativeTime date={listing.createdAt} />
         </p>
       </div>
     </motion.article>

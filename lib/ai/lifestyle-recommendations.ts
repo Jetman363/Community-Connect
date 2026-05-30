@@ -126,5 +126,26 @@ export async function getLifestyleRecommendations(input: {
     });
   }
 
+  if (interests.includes("marketplace") || interests.includes("shopping") || tags.includes("tools")) {
+    items.push({
+      id: "lr7",
+      title: "DeWalt Power Tool Set — $275",
+      description: "You recently searched for power tools. This listing is 0.8 mi away.",
+      category: "marketplace",
+      imageUrl: "https://images.unsplash.com/photo-1504148455328-c376907d0c59?w=600&q=80",
+      href: "/marketplace",
+      reason: "Based on your recent marketplace searches",
+    });
+    items.push({
+      id: "lr8",
+      title: "Community Garage Sale — Oak Hills Block",
+      description: "Trending garage sale this Saturday. Multi-family sale with tools and furniture.",
+      category: "marketplace",
+      imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80",
+      href: "/marketplace?tab=classifieds",
+      reason: "Trending garage sale near you",
+    });
+  }
+
   return { items: items.slice(0, 4), source: "rules" };
 }

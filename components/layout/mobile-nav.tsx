@@ -11,7 +11,7 @@ export function MobileNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border)] bg-[var(--card)]/95 backdrop-blur-lg md:hidden">
       <div className="safe-bottom mx-auto flex max-w-lg items-center justify-around px-2 py-2">
-        {mobileNav.map(({ href, label, icon: Icon }) => {
+        {mobileNav.map(({ href, label, icon: LucideIcon, Icon: CustomIcon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
@@ -22,7 +22,11 @@ export function MobileNav() {
                 active ? "text-[var(--accent)]" : "text-[var(--muted-foreground)]"
               )}
             >
-              <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+              {CustomIcon ? (
+                <CustomIcon className="h-5 w-5" />
+              ) : LucideIcon ? (
+                <LucideIcon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+              ) : null}
               <span>{label}</span>
             </Link>
           );

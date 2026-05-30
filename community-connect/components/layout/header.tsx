@@ -11,7 +11,7 @@ import {
   DropdownChevron,
 } from "@/components/ui/dropdown";
 import { mockNotifications, currentUser } from "@/lib/mock-data";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { Badge } from "@/components/ui/badge";
 import { CommunitySwitcher } from "@/components/layout/community-switcher";
 
@@ -53,7 +53,7 @@ export function AppHeader() {
                 {n.body}
               </span>
               <span className="text-[10px] text-[var(--muted-foreground)]">
-                {formatRelative(n.createdAt)}
+                <RelativeTime date={n.createdAt} />
               </span>
             </div>
           </DropdownItem>

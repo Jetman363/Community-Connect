@@ -25,7 +25,7 @@ const handlers = new Map<JobName, JobHandler<JobName>>();
 const deadLetter: QueuedJob[] = [];
 const inProcessQueue: QueuedJob[] = [];
 let processing = false;
-let bullAvailable = false;
+const bullAvailable = false;
 
 const defaultHandlers: Partial<Record<JobName, JobHandler<JobName>>> = {
   sendNotification: async (p) => {

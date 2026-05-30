@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { fetchComments, createComment } from "@/lib/api/client";
 import type { FeedComment } from "@/types/feed";
 
@@ -45,7 +45,7 @@ function CommentItem({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-xs">
             <span className="font-medium">{comment.author.displayName}</span>
-            <span className="text-[var(--muted-foreground)]">{formatRelative(comment.createdAt)}</span>
+            <RelativeTime date={comment.createdAt} className="text-[var(--muted-foreground)]" />
           </div>
           <p className="mt-1 text-sm">{comment.content}</p>
           <div className="mt-1 flex gap-2">

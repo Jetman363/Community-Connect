@@ -55,13 +55,19 @@ export function EnterpriseConsole() {
   const [reportQueue, setReportQueue] = useState<IncidentReportDto[]>([]);
   const [auditItems, setAuditItems] = useState<{ action: string; createdAt: string; actor: { displayName: string } | null }[]>([]);
   const [health, setHealth] = useState<Record<string, string> | null>(null);
+  const [engagement, setEngagement] = useState<{
+    dau: number;
+    dauChange: number;
+    retentionDay7: number;
+    checkInsToday: number;
+  } | null>(null);
   const [broadcast, setBroadcast] = useState({ title: "", body: "", severity: "INFO" });
   const [communities, setCommunities] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     void (async () => {
       try {
-        const [o, m, a, r, audit, h, comm] = await Promise.all([
+        const [o, m, a, r, audit, h, comm, eng] = await Promise.all([
           apiFetch<Overview>("/api/admin/overview"),
           apiFetch<{ cases: ModCase[] }>("/api/admin/moderation/queue"),
           apiFetch<{ items: SafetyAlertDto[] }>("/api/admin/alerts?limit=10"),
@@ -71,6 +77,9 @@ export function EnterpriseConsole() {
           ),
           apiFetch<Record<string, string>>("/api/admin/system-health"),
           apiFetch<{ items: { id: string; name: string }[] }>("/api/communities"),
+          apiFetch<{ dau: number; dauChange: number; retentionDay7: number; checkInsToday: number }>(
+            "/api/admin/engagement"
+          ).catch(() => null),
         ]);
         setOverview(o);
         setModCases(m.cases ?? []);
@@ -79,6 +88,7 @@ export function EnterpriseConsole() {
         setAuditItems(audit.items ?? []);
         setHealth(h);
         setCommunities(comm.items ?? []);
+        if (eng) setEngagement(eng);
       } catch {
         setOverview({
           users: mockAnalytics.totalUsers,
@@ -156,6 +166,7 @@ export function EnterpriseConsole() {
             <Link href="/hoa">HOA</Link>
           </TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="engagement">Engagement</TabsTrigger>
           <TabsTrigger value="audit">Audit</TabsTrigger>
           <TabsTrigger value="broadcasts">Broadcasts</TabsTrigger>
           <TabsTrigger value="health">System</TabsTrigger>
@@ -289,6 +300,26 @@ export function EnterpriseConsole() {
 
         <TabsContent value="analytics">
           <AnalyticsPanel />
+        </TabsContent>
+
+        <TabsContent value="engagement">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "DAU", value: engagement?.dau ?? 847, sub: `+${engagement?.dauChange ?? 12.4}%` },
+              { label: "7-Day Retention", value: `${engagement?.retentionDay7 ?? 42}%`, sub: "target 40%" },
+              { label: "Check-ins Today", value: engagement?.checkInsToday ?? 312, sub: "gamification" },
+              { label: "Active Challenges", value: 4, sub: "community goals" },
+            ].map((m) => (
+              <div key={m.label} className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+                <p className="text-xs text-[var(--muted-foreground)]">{m.label}</p>
+                <p className="text-2xl font-semibold">{m.value}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">{m.sub}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-[var(--muted-foreground)]">
+            Phase 10 engagement metrics stub — wire to analytics pipeline in production.
+          </p>
         </TabsContent>
 
         <TabsContent value="audit">

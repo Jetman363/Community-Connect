@@ -857,6 +857,219 @@ async function main() {
     },
   });
 
+  // ─── Phase 10: Engagement & Lifestyle ──────────────────────────────────────
+  await prisma.communityGroup.deleteMany({ where: { communityId: community.id } });
+  await prisma.localDeal.deleteMany({ where: { communityId: community.id } });
+  await prisma.newsArticle.deleteMany({ where: { communityId: community.id } });
+  await prisma.communityChallenge.deleteMany({ where: { communityId: community.id } });
+  await prisma.trendingItem.deleteMany({ where: { communityId: community.id } });
+
+  const runnersGroup = await prisma.communityGroup.create({
+    data: {
+      communityId: community.id,
+      name: "Oak Hills Runners",
+      category: "Fitness",
+      description: "Morning jogs and weekend 5Ks",
+      memberCount: 142,
+      isPrivate: false,
+    },
+  });
+
+  const parentsGroup = await prisma.communityGroup.create({
+    data: {
+      communityId: community.id,
+      name: "Parents of Oak Hills",
+      category: "Family",
+      description: "Playdates, school updates, kid-friendly events",
+      memberCount: 312,
+      isPrivate: false,
+    },
+  });
+
+  await prisma.groupMember.createMany({
+    data: [
+      { userId: resident.id, groupId: runnersGroup.id, role: "MEMBER" },
+      { userId: sarah.id, groupId: runnersGroup.id, role: "MODERATOR" },
+      { userId: resident.id, groupId: parentsGroup.id, role: "MODERATOR" },
+    ],
+  });
+
+  await prisma.groupPost.create({
+    data: {
+      groupId: runnersGroup.id,
+      postId: post1.id,
+      content: "Cross-post from community feed",
+    },
+  });
+
+  const deal1 = await prisma.localDeal.create({
+    data: {
+      communityId: community.id,
+      businessId: bakery.id,
+      title: "20% Off Pastries",
+      description: "Valid on all baked goods before 10 AM weekdays",
+      discount: "20% off",
+      dealType: "PERCENTAGE",
+      expiresAt: new Date(Date.now() + 7 * 86400000),
+      redeemedCount: 47,
+    },
+  });
+
+  await prisma.localDeal.create({
+    data: {
+      communityId: community.id,
+      businessId: landscaping.id,
+      title: "Free Lawn Consultation",
+      description: "First-time customers get a free 30-min assessment",
+      discount: "Free",
+      dealType: "FREEBIE",
+      expiresAt: new Date(Date.now() + 14 * 86400000),
+      redeemedCount: 12,
+    },
+  });
+
+  await prisma.savedDeal.create({
+    data: { userId: resident.id, dealId: deal1.id },
+  });
+
+  const achievements = await Promise.all([
+    prisma.achievement.upsert({
+      where: { key: "first_post" },
+      update: {},
+      create: {
+        key: "first_post",
+        title: "First Post",
+        description: "Share your first community post",
+        icon: "📝",
+        points: 10,
+      },
+    }),
+    prisma.achievement.upsert({
+      where: { key: "week_streak" },
+      update: {},
+      create: {
+        key: "week_streak",
+        title: "Week Warrior",
+        description: "7-day check-in streak",
+        icon: "🔥",
+        points: 50,
+      },
+    }),
+    prisma.achievement.upsert({
+      where: { key: "local_hero" },
+      update: {},
+      create: {
+        key: "local_hero",
+        title: "Local Hero",
+        description: "Complete a community challenge",
+        icon: "🏆",
+        points: 100,
+      },
+    }),
+  ]);
+
+  await prisma.communityPoints.upsert({
+    where: { userId: resident.id },
+    update: { balance: 1240, level: 5 },
+    create: { userId: resident.id, balance: 1240, level: 5 },
+  });
+
+  await prisma.communityPoints.upsert({
+    where: { userId: sarah.id },
+    update: { balance: 3420, level: 8 },
+    create: { userId: sarah.id, balance: 3420, level: 8 },
+  });
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  await prisma.dailyCheckIn.createMany({
+    data: [
+      { userId: resident.id, date: yesterday, streak: 6 },
+      { userId: resident.id, date: today, streak: 7 },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.userAchievement.createMany({
+    data: [
+      { userId: resident.id, achievementId: achievements[0].id },
+      { userId: resident.id, achievementId: achievements[1].id },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.pointTransaction.createMany({
+    data: [
+      { userId: resident.id, amount: 10, reason: "CHECK_IN" },
+      { userId: resident.id, amount: 50, reason: "CHALLENGE" },
+      { userId: sarah.id, amount: 100, reason: "ACHIEVEMENT" },
+    ],
+  });
+
+  const cleanupChallenge = await prisma.communityChallenge.create({
+    data: {
+      communityId: community.id,
+      title: "Neighborhood Cleanup Week",
+      description: "Pick up litter and beautify our streets",
+      endDate: new Date(Date.now() + 14 * 86400000),
+      participantCount: 89,
+      milestone: 500,
+    },
+  });
+
+  await prisma.challengeParticipation.create({
+    data: { userId: resident.id, challengeId: cleanupChallenge.id, progress: 3 },
+  });
+
+  await prisma.newsArticle.createMany({
+    data: [
+      {
+        communityId: community.id,
+        title: "City Council Approves New Park Funding",
+        source: "Oak Hills Tribune",
+        summary: "A $2.4M package will expand Cedar Park playground by fall.",
+        category: "Local Government",
+        publishedAt: new Date(Date.now() - 3600000),
+      },
+      {
+        communityId: community.id,
+        title: "Weekend Weather: Sunny Skies Expected",
+        source: "Bay Area Weather",
+        summary: "Highs near 78°F — ideal for outdoor events.",
+        category: "Weather",
+        publishedAt: new Date(Date.now() - 7200000),
+      },
+    ],
+  });
+
+  await prisma.userInterest.createMany({
+    data: [
+      { userId: resident.id, topic: "events" },
+      { userId: resident.id, topic: "deals" },
+      { userId: resident.id, topic: "family" },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.personalizationProfile.upsert({
+    where: { userId: resident.id },
+    update: { interests: ["events", "deals", "family"], preferences: { feedDensity: "normal" } },
+    create: {
+      userId: resident.id,
+      interests: ["events", "deals", "family"],
+      preferences: { feedDensity: "normal" },
+    },
+  });
+
+  await prisma.trendingItem.createMany({
+    data: [
+      { communityId: community.id, entityType: "POST", entityId: post1.id, score: 98, period: "DAY" },
+      { communityId: community.id, entityType: "DEAL", entityId: deal1.id, score: 92, period: "DAY" },
+      { communityId: community.id, entityType: "GROUP", entityId: parentsGroup.id, score: 85, period: "DAY" },
+    ],
+    skipDuplicates: true,
+  });
+
   await prisma.auditLog.createMany({
     data: [
       {
@@ -882,9 +1095,10 @@ async function main() {
     data: { organizationId: org.id, retentionDays: 365 },
   });
 
-  console.log("Seed complete (Phase 7).");
+  console.log("Seed complete (Phase 10).");
   console.log("Community:", community.slug, "| Org:", org.slug);
   console.log("Alerts:", alerts.length, "| Listings:", listings.length, "| Mod cases: 2");
+  console.log("Engagement: groups, deals, challenges, points seeded for demo users");
   console.log("Demo login: demo@communityconnect.app / Demo1234!");
   console.log("Resident:   resident@communityconnect.app / Demo1234!");
   console.log("Business:   business@communityconnect.app / Demo1234!");

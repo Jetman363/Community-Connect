@@ -66,11 +66,24 @@ async function main() {
     },
   });
 
+  const publicSafety = await prisma.user.upsert({
+    where: { email: "safety@communityconnect.app" },
+    update: {},
+    create: {
+      email: "safety@communityconnect.app",
+      passwordHash,
+      role: "PUBLIC_SAFETY",
+      verified: true,
+      profile: { create: { displayName: "Oak Hills PD", badges: ["Public Safety"] } },
+    },
+  });
+
   for (const [user, role] of [
     [admin, "ADMIN"],
     [resident, "RESIDENT"],
     [sarah, "RESIDENT"],
     [james, "RESIDENT"],
+    [publicSafety, "PUBLIC_SAFETY"],
   ] as const) {
     await prisma.communityMember.upsert({
       where: { communityId_userId: { communityId: community.id, userId: user.id } },
@@ -235,11 +248,145 @@ async function main() {
     ],
   });
 
-  console.log("Seed complete (Phase 3).");
+  await prisma.safetyAlert.deleteMany({ where: { communityId: community.id } });
+  await prisma.report.deleteMany({ where: { communityId: community.id } });
+  await prisma.geofenceZone.deleteMany({ where: { communityId: community.id } });
+
+  const alerts = await Promise.all([
+    prisma.safetyAlert.create({
+      data: {
+        communityId: community.id,
+        createdById: publicSafety.id,
+        title: "Armed Robbery — Avoid Main St",
+        description: "Police responding near 4th & Main. Avoid area until cleared.",
+        category: "CRIME",
+        severity: "CRITICAL",
+        lat: 37.7749,
+        lng: -122.4194,
+        radiusM: 800,
+        locationLabel: "4th & Main St",
+        source: "Oak Hills PD",
+        active: true,
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
+      },
+    }),
+    prisma.safetyAlert.create({
+      data: {
+        communityId: community.id,
+        createdById: publicSafety.id,
+        title: "Severe Wind Advisory",
+        description: "Gusts up to 45 mph expected 6–10 PM.",
+        category: "WEATHER",
+        severity: "MODERATE",
+        lat: 37.78,
+        lng: -122.41,
+        radiusM: 5000,
+        locationLabel: "Oak Hills County",
+        source: "National Weather Service",
+        active: true,
+      },
+    }),
+    prisma.safetyAlert.create({
+      data: {
+        communityId: community.id,
+        title: "Road Closure — Water Main Repair",
+        description: "Oak Ave closed between Cedar & Pine until 6 PM.",
+        category: "TRAFFIC",
+        severity: "LOW",
+        lat: 37.772,
+        lng: -122.422,
+        locationLabel: "Oak Ave",
+        source: "Public Works",
+        active: true,
+      },
+    }),
+  ]);
+
+  await prisma.report.create({
+    data: {
+      communityId: community.id,
+      reporterId: resident.id,
+      title: "Broken streetlight",
+      description: "Light out at 2nd & Maple — hazard for evening walkers.",
+      category: "MAINTENANCE",
+      severity: "LOW",
+      suggestedCategory: "MAINTENANCE",
+      status: "SUBMITTED",
+      lat: 37.772,
+      lng: -122.422,
+      locationLabel: "2nd & Maple",
+    },
+  });
+
+  await prisma.report.create({
+    data: {
+      communityId: community.id,
+      reporterId: james.id,
+      title: "Suspicious vehicle",
+      description: "Unmarked van parked on Cedar Park loop for 3+ hours.",
+      category: "CRIME",
+      severity: "MODERATE",
+      suggestedCategory: "CRIME",
+      status: "UNDER_REVIEW",
+      anonymous: true,
+      lat: 37.776,
+      lng: -122.415,
+      assignedToId: publicSafety.id,
+    },
+  });
+
+  const hoaZone = await prisma.geofenceZone.create({
+    data: {
+      communityId: community.id,
+      name: "Oak Hills HOA Boundary",
+      type: "HOA",
+      centerLat: 37.775,
+      centerLng: -122.418,
+      radiusM: 2000,
+    },
+  });
+
+  await prisma.geofenceZone.create({
+    data: {
+      communityId: community.id,
+      name: "Downtown Emergency Zone",
+      type: "EMERGENCY",
+      centerLat: 37.7749,
+      centerLng: -122.4194,
+      radiusM: 1200,
+    },
+  });
+
+  await prisma.alertSubscription.create({
+    data: {
+      userId: resident.id,
+      zoneId: hoaZone.id,
+      notifyEmergency: true,
+      notifyModerate: true,
+    },
+  });
+
+  await prisma.watchArea.create({
+    data: {
+      userId: resident.id,
+      name: "Home",
+      type: "HOME",
+      centerLat: 37.774,
+      centerLng: -122.42,
+      radiusM: 804,
+    },
+  });
+
+  await prisma.alertAcknowledgment.create({
+    data: { userId: resident.id, alertId: alerts[1].id },
+  });
+
+  console.log("Seed complete (Phase 4).");
   console.log("Community:", community.slug);
-  console.log("Posts: 6 | Comments: 3 | Reactions: 6");
+  console.log("Alerts:", alerts.length, "| Reports: 2 | Geofences: 2");
   console.log("Demo login: demo@communityconnect.app / Demo1234!");
   console.log("Resident:   resident@communityconnect.app / Demo1234!");
+  console.log("Safety:     safety@communityconnect.app / Demo1234!");
 }
 
 main()

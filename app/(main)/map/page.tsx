@@ -1,77 +1,87 @@
 "use client";
 
-import { PageTransition, PageHeader } from "@/components/ui/page-header";
-import { MapPlaceholder } from "@/components/ui/map-placeholder";
-import { FilterChips } from "@/components/ui/filter-chips";
-import { Badge } from "@/components/ui/badge";
-import { mockAlerts, mockEvents, mockBusinesses } from "@/lib/mock-data";
 import { useState } from "react";
-import { MapPin, Bell, Calendar, Building2 } from "lucide-react";
-
-const layers = [
-  { id: "all", label: "All" },
-  { id: "alerts", label: "Alerts" },
-  { id: "events", label: "Events" },
-  { id: "businesses", label: "Businesses" },
-] as const;
-
-type Layer = (typeof layers)[number]["id"];
+import { PageTransition, PageHeader } from "@/components/ui/page-header";
+import { LayerControls } from "@/components/map/layer-controls";
+import { MapCanvas } from "@/components/map/map-canvas";
+import { IncidentCard } from "@/components/map/incident-card";
+import { MarkerClusterPlaceholder } from "@/components/map/marker-cluster-placeholder";
+import { useMapMarkers } from "@/hooks/use-map-markers";
+import type { MapMarkerDto } from "@/types/safety";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Navigation, Loader2 } from "lucide-react";
+import { DEFAULT_MAP_CENTER } from "@/lib/maps/loader";
 
 export default function MapPage() {
-  const [layer, setLayer] = useState<Layer>("all");
+  const [layer, setLayer] = useState("all");
+  const [selected, setSelected] = useState<MapMarkerDto | null>(null);
+  const [center, setCenter] = useState(DEFAULT_MAP_CENTER);
+  const [radiusKm, setRadiusKm] = useState(2);
+  const [locating, setLocating] = useState(false);
+  const { markers, loading } = useMapMarkers({ layers: layer });
 
-  const pins = [
-    ...mockAlerts.map((a) => ({ type: "alert" as const, title: a.title, location: a.location, severity: a.severity })),
-    ...mockEvents.map((e) => ({ type: "event" as const, title: e.title, location: e.location })),
-    ...mockBusinesses.map((b) => ({ type: "business" as const, title: b.name, location: b.distance })),
-  ];
-
-  const displayPins =
-    layer === "all"
-      ? pins
-      : layer === "alerts"
-        ? pins.filter((p) => p.type === "alert")
-        : layer === "events"
-          ? pins.filter((p) => p.type === "event")
-          : pins.filter((p) => p.type === "business");
+  const handleLocate = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   return (
     <PageTransition>
       <PageHeader
         title="Community Map"
-        description="Alerts, events, businesses, and reports on one map"
+        description="Alerts, incidents, events, and local services"
       />
 
-      <FilterChips options={[...layers]} value={layer} onChange={setLayer} className="mb-4" />
+      <LayerControls value={layer} onChange={setLayer} />
 
-      <MapPlaceholder label="Interactive community map" height="h-[50vh]" className="mb-6" />
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {displayPins.slice(0, 9).map((pin, i) => (
-          <div
-            key={i}
-            className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--muted)]">
-              {pin.type === "alert" && <Bell className="h-4 w-4 text-[var(--emergency)]" />}
-              {pin.type === "event" && <Calendar className="h-4 w-4 text-[var(--accent)]" />}
-              {pin.type === "business" && <Building2 className="h-4 w-4 text-emerald-500" />}
-            </div>
-            <div>
-              <p className="font-medium text-sm">{pin.title}</p>
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
-                <MapPin className="h-3 w-3" />
-                {pin.location}
-              </p>
-              {"severity" in pin && (
-                <Badge variant="emergency" className="mt-2">
-                  {pin.severity}
-                </Badge>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={handleLocate} disabled={locating}>
+          {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+          My location
+        </Button>
+        <label className="flex items-center gap-2 text-sm">
+          Radius (km)
+          <Input
+            type="number"
+            min={0.5}
+            max={25}
+            step={0.5}
+            value={radiusKm}
+            onChange={(e) => setRadiusKm(Number(e.target.value))}
+            className="w-20 h-8"
+          />
+        </label>
+        <MarkerClusterPlaceholder count={markers.length} />
       </div>
+
+      <div className="relative mb-6">
+        <MapCanvas
+          markers={markers}
+          center={center}
+          className="h-[55vh] min-h-[280px]"
+          onMarkerClick={setSelected}
+        />
+        {selected && (
+          <IncidentCard marker={selected} onClose={() => setSelected(null)} />
+        )}
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-[var(--muted-foreground)]">Loading markers…</p>
+      ) : (
+        <p className="text-xs text-[var(--muted-foreground)]">
+          {markers.length} markers in view · radius filter {radiusKm} km (API bbox on pan coming soon)
+        </p>
+      )}
     </PageTransition>
   );
 }

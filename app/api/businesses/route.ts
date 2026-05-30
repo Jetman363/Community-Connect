@@ -4,7 +4,7 @@ import { rateLimit, clientKey } from "@/lib/api/rate-limit";
 import { jsonError, jsonOk } from "@/lib/api/response";
 import { withDbTimeout, isDbUnavailable } from "@/lib/api/db";
 import { businessSchema, businessQuerySchema } from "@/lib/validations";
-import { listBusinesses, createBusiness } from "@/lib/api/services/businesses";
+import { listBusinesses, createBusiness, toBusinessCreateInput } from "@/lib/api/services/businesses";
 import { getDefaultCommunityId } from "@/lib/api/services/marketplace";
 import { getMockBusinessesDto } from "@/lib/api/fallback-marketplace";
 import { canManageBusiness } from "@/lib/permissions/rbac";
@@ -61,8 +61,7 @@ export async function POST(req: NextRequest) {
       createBusiness({
         communityId,
         ownerId: auth.payload.sub,
-        ...parsed.data,
-        categories: parsed.data.categories ?? [],
+        ...toBusinessCreateInput(parsed.data),
       })
     );
     return jsonOk(business, 201);

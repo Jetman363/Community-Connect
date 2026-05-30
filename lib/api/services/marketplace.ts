@@ -97,8 +97,8 @@ export async function listListings(input: ListListingsInput) {
       ...(decoded
         ? {
             OR: [
-              { createdAt: { lt: new Date(decoded.createdAt) } },
-              { createdAt: new Date(decoded.createdAt), id: { lt: decoded.id } },
+              { createdAt: { lt: new Date(decoded.t) } },
+              { createdAt: new Date(decoded.t), id: { lt: decoded.id } },
             ],
           }
         : {}),
@@ -136,8 +136,7 @@ export async function listListings(input: ListListingsInput) {
 
   return {
     items: page.map((r) => mapListing(r, { favorited: favoritedIds.has(r.id) })),
-    nextCursor:
-      hasMore && last ? encodeCursor({ id: last.id, createdAt: last.createdAt.toISOString() }) : null,
+    nextCursor: hasMore && last ? encodeCursor(last.id, last.createdAt) : null,
     hasMore,
   };
 }
@@ -217,6 +216,32 @@ export async function getTrendingListings(communityId: string, limit = 8) {
     take: limit,
   });
   return items.map((r) => mapListing(r));
+}
+
+export async function listFlaggedListings(communityId?: string, limit = 50) {
+  const items = await prisma.marketplaceListing.findMany({
+    where: {
+      status: { in: ["FLAGGED", "PENDING"] },
+      ...(communityId ? { communityId } : {}),
+    },
+    include: listingInclude,
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+  });
+  return items.map((r) => mapListing(r));
+}
+
+export async function moderateListing(
+  id: string,
+  status: ListingStatus,
+  featured?: boolean
+) {
+  const row = await prisma.marketplaceListing.update({
+    where: { id },
+    data: { status, ...(featured != null ? { featured } : {}) },
+    include: listingInclude,
+  });
+  return mapListing(row);
 }
 
 export async function bboxListings(

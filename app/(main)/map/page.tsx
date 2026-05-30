@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { LayerControls } from "@/components/map/layer-controls";
-import { MapCanvas } from "@/components/map/map-canvas";
+import { MapCanvasDynamic } from "@/components/map/map-canvas-dynamic";
 import { IncidentCard } from "@/components/map/incident-card";
 import { MarkerClusterPlaceholder } from "@/components/map/marker-cluster-placeholder";
 import { useMapMarkers } from "@/hooks/use-map-markers";
@@ -64,7 +64,7 @@ export default function MapPage() {
       </div>
 
       <div className="relative mb-6">
-        <MapCanvas
+        <MapCanvasDynamic
           markers={markers}
           center={center}
           className="h-[55vh] min-h-[280px]"

@@ -16,7 +16,10 @@ export async function GET(req: NextRequest) {
   if (!parsed.success) return jsonError("Invalid query", 400, parsed.error.flatten());
 
   const layerParam = parsed.data.layer ?? "all";
-  const layers = layerParam === "all" ? ["all" as const] : (layerParam.split(",") as ("alerts" | "reports" | "events" | "businesses")[]);
+  const layers: import("@/lib/api/services/map").MapLayer[] =
+    layerParam === "all"
+      ? ["all"]
+      : (layerParam.split(",") as import("@/lib/api/services/map").MapLayer[]);
 
   try {
     const communityId =

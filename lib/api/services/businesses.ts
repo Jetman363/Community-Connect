@@ -1,8 +1,33 @@
 import type { Prisma } from "@prisma/client";
+import type { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import type { businessSchema } from "@/lib/validations";
 import { encodeCursor, decodeCursor } from "@/lib/api/pagination";
 import { withinRadiusM } from "@/lib/geo/distance";
 import type { BusinessDto, ServiceDto, BusinessAnalyticsDto } from "@/types/marketplace";
+
+type BusinessInput = z.infer<typeof businessSchema>;
+
+export function toBusinessUpdateInput(data: Partial<BusinessInput>): Prisma.BusinessUpdateInput {
+  const { hours, socialLinks, ...rest } = data;
+  return {
+    ...rest,
+    ...(hours !== undefined ? { hours: hours as Prisma.InputJsonValue } : {}),
+    ...(socialLinks !== undefined ? { socialLinks: socialLinks as Prisma.InputJsonValue } : {}),
+  };
+}
+
+export function toBusinessCreateInput(
+  data: BusinessInput
+): Omit<Prisma.BusinessUncheckedCreateInput, "communityId" | "ownerId"> {
+  const { hours, socialLinks, ...rest } = data;
+  return {
+    ...rest,
+    categories: data.categories ?? [],
+    ...(hours !== undefined ? { hours: hours as Prisma.InputJsonValue } : {}),
+    ...(socialLinks !== undefined ? { socialLinks: socialLinks as Prisma.InputJsonValue } : {}),
+  };
+}
 
 type BusinessRow = Prisma.BusinessGetPayload<object>;
 
@@ -66,8 +91,8 @@ export async function listBusinesses(input: {
       ...(decoded
         ? {
             OR: [
-              { createdAt: { lt: new Date(decoded.createdAt) } },
-              { createdAt: new Date(decoded.createdAt), id: { lt: decoded.id } },
+              { createdAt: { lt: new Date(decoded.t) } },
+              { createdAt: new Date(decoded.t), id: { lt: decoded.id } },
             ],
           }
         : {}),
@@ -118,8 +143,7 @@ export async function listBusinesses(input: {
           : {}),
       })
     ),
-    nextCursor:
-      hasMore && last ? encodeCursor({ id: last.id, createdAt: last.createdAt.toISOString() }) : null,
+    nextCursor: hasMore && last ? encodeCursor(last.id, last.createdAt) : null,
     hasMore,
   };
 }

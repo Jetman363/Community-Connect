@@ -55,16 +55,36 @@ See [`.env.example`](.env.example). Required for full functionality:
 | `npm run dev` | Standard Next.js dev server |
 | `npm run dev:socket` | Custom server with Socket.io |
 | `npm run build` | Production build |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run smoke` | API smoke tests (requires running server) |
+| `npm run test:coverage` | Test coverage report |
 | `npm run db:generate` | Prisma client generate |
 | `npm run db:migrate` | Run migrations |
 | `npm run db:seed` | Seed demo data |
 
 ## Deployment
 
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`docs/PHASE8.md`](docs/PHASE8.md) for full production architecture.
+
+### Production quickstart
+
+```bash
+cd community-connect
+cp .env.example .env   # set DATABASE_URL, JWT_SECRET, APP_ENV=production
+
+npm ci
+npx prisma migrate deploy
+npm run build
+npm run test
+npm start
+```
+
+**Verify:** `curl http://localhost:3000/api/health` and `bash scripts/smoke-test.sh`
+
 ### Vercel (frontend + API routes)
 
 1. Connect repo, set root directory to `community-connect`
-2. Set `DATABASE_URL`, `JWT_SECRET`, optional `OPENAI_API_KEY`
+2. Set `DATABASE_URL`, `JWT_SECRET`, optional `REDIS_URL`, `SENTRY_DSN`
 3. Build command: `prisma generate && next build` (see `vercel.json`)
 
 Socket.io requires a separate Node service or use polling fallback on Vercel.
@@ -72,11 +92,19 @@ Socket.io requires a separate Node service or use polling fallback on Vercel.
 ### Database (Railway / Supabase)
 
 ```bash
-# Supabase: use connection pooler URL for serverless
 DATABASE_URL="postgresql://..."
 npx prisma migrate deploy
-npm run db:seed
+npm run db:seed   # staging only
 ```
+
+### CI/CD
+
+- `.github/workflows/community-connect-ci.yml` — lint, typecheck, build, test
+- Deploy templates for staging and production
+
+### Launch checklist
+
+[`docs/LAUNCH-CHECKLIST.md`](docs/LAUNCH-CHECKLIST.md)
 
 ## API documentation
 

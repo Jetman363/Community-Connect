@@ -16,7 +16,7 @@ export function Sidebar() {
   return (
     <aside className="hidden w-60 shrink-0 lg:block">
       <nav className="sticky top-20 space-y-1">
-        {items.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: LucideIcon, Icon: CustomIcon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link key={href} href={href} className="relative block">
@@ -35,7 +35,11 @@ export function Sidebar() {
                     : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
                 )}
               >
-                <Icon className="h-4 w-4" />
+                {CustomIcon ? (
+                  <CustomIcon className="h-4 w-4" />
+                ) : LucideIcon ? (
+                  <LucideIcon className="h-4 w-4" />
+                ) : null}
                 {label}
               </span>
             </Link>

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const filters = [
   { id: "all", label: "All" },
   { id: "post", label: "Posts" },
+  { id: "marketplace", label: "Marketplace" },
   { id: "deal", label: "Deals" },
   { id: "event", label: "Events" },
   { id: "group", label: "Groups" },

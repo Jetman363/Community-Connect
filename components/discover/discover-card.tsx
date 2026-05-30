@@ -14,6 +14,7 @@ const typeColors: Record<string, string> = {
   group: "bg-orange-500/10 text-orange-600",
   news: "bg-slate-500/10 text-slate-600",
   challenge: "bg-amber-500/10 text-amber-600",
+  marketplace: "bg-blue-600/10 text-blue-700",
 };
 
 export function DiscoverCard({

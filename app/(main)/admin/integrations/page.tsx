@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api/client";
 import { Plug, RefreshCw } from "lucide-react";
 
@@ -65,9 +67,12 @@ export default function IntegrationsPage() {
         <Button size="sm" variant="outline" onClick={() => void load()}>
           <RefreshCw className="mr-2 h-4 w-4" /> Refresh
         </Button>
-        <Button size="sm" variant="outline" asChild>
-          <a href="/admin/integrations/monitor">Monitoring</a>
-        </Button>
+        <Link
+          href="/admin/integrations/monitor"
+          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+        >
+          Monitoring
+        </Link>
       </div>
 
       {loading ? (

@@ -7,6 +7,8 @@ import { FilterChips } from "@/components/ui/filter-chips";
 import { MapPlaceholder } from "@/components/ui/map-placeholder";
 import { EventCard } from "@/components/cards/event-card";
 import { mockEvents, eventCategories, type EventCategory, type MockEvent } from "@/lib/mock-data";
+import { PageHeroBanner } from "@/components/ui/page-hero-banner";
+import { communityPhotos } from "@/lib/images/community-photos";
 import { Calendar } from "lucide-react";
 
 export default function EventsPage() {
@@ -48,6 +50,13 @@ export default function EventsPage() {
       <PageHeader
         title="Events"
         description="Community gatherings, volunteer days, and local happenings"
+      />
+
+      <PageHeroBanner
+        src={communityPhotos.hero.events}
+        alt="Farmers market with fresh local produce"
+        title="Upcoming in Oak Hills"
+        description="Markets, block parties, safety meetings, and more"
       />
 
       <Tabs defaultValue="list">

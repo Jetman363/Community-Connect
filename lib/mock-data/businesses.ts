@@ -1,3 +1,5 @@
+import { businessCoverPhoto } from "@/lib/images/community-photos";
+
 export type ServiceCategory =
   | "food"
   | "home"
@@ -39,7 +41,7 @@ export const mockBusinesses: MockBusiness[] = [
     available: true,
     verified: true,
     description: "Artisan breads, pastries, and locally roasted coffee.",
-    imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80",
+    imageUrl: businessCoverPhoto("food"),
     tags: ["Bakery", "Coffee", "Local"],
   },
   {
@@ -56,6 +58,7 @@ export const mockBusinesses: MockBusiness[] = [
     available: true,
     verified: true,
     description: "Full-service landscaping, irrigation, and tree care.",
+    imageUrl: businessCoverPhoto("home"),
     tags: ["Landscaping", "Licensed", "Insured"],
   },
   {
@@ -72,6 +75,7 @@ export const mockBusinesses: MockBusiness[] = [
     available: true,
     verified: false,
     description: "Oil changes, brakes, and general auto repair.",
+    imageUrl: businessCoverPhoto("automotive"),
     tags: ["Auto Repair", "Same-Day"],
   },
   {
@@ -88,7 +92,7 @@ export const mockBusinesses: MockBusiness[] = [
     available: true,
     verified: true,
     description: "Primary care, urgent visits, and telehealth options.",
-    imageUrl: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&q=80",
+    imageUrl: businessCoverPhoto("health"),
     tags: ["Healthcare", "Telehealth"],
   },
   {
@@ -105,6 +109,7 @@ export const mockBusinesses: MockBusiness[] = [
     available: false,
     verified: true,
     description: "Estate planning, HOA disputes, and small business law.",
+    imageUrl: businessCoverPhoto("professional"),
     tags: ["Legal", "HOA"],
   },
   {
@@ -121,6 +126,7 @@ export const mockBusinesses: MockBusiness[] = [
     available: true,
     verified: true,
     description: "Groceries, deli sandwiches, and household essentials.",
+    imageUrl: businessCoverPhoto("retail"),
     tags: ["Grocery", "24/7"],
   },
 ];

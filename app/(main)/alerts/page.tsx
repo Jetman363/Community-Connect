@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAlerts } from "@/hooks/use-alerts";
 import type { SafetyAlertDto } from "@/types/safety";
+import { PageHeroBanner } from "@/components/ui/page-hero-banner";
+import { communityPhotos } from "@/lib/images/community-photos";
 import { MapPin, Clock, Radio, Search } from "lucide-react";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { MapCanvasDynamic } from "@/components/map/map-canvas-dynamic";
 import { useMapMarkers } from "@/hooks/use-map-markers";
 
@@ -39,6 +41,13 @@ export default function AlertsPage() {
       <PageHeader
         title="Safety Alerts"
         description="Public safety advisories, weather warnings, and emergency notifications"
+      />
+
+      <PageHeroBanner
+        src={communityPhotos.hero.alerts}
+        alt="Professional safety briefing setting"
+        title="Stay informed, stay safe"
+        description="Advisories from local agencies and verified community sources"
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -113,7 +122,7 @@ export default function AlertsPage() {
               </p>
               <p className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Issued {formatRelative(selected.createdAt)}
+                Issued <RelativeTime date={selected.createdAt} />
               </p>
             </div>
             {selected.source && (

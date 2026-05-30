@@ -24,7 +24,9 @@ export abstract class BaseConnector {
   }
 
   /** Emit normalized outbound events */
-  protected async publish(event: Omit<IntegrationEvent, "id" | "timestamp">): Promise<void> {
+  protected async publish(
+    event: Omit<IntegrationEvent, "id" | "timestamp" | "connectorSlug">
+  ): Promise<void> {
     const { getEventBroker } = await import("./event-broker");
     getEventBroker().publish({
       ...event,

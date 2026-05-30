@@ -3,6 +3,7 @@ import { jsonOk, jsonError } from "@/lib/api/response";
 import { enterpriseAuth } from "@/lib/api/handlers/enterprise";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/prisma";
+import { asInputJson } from "@/lib/prisma-json";
 import { z } from "zod";
 
 const ruleSchema = z.object({
@@ -65,8 +66,8 @@ export async function POST(req: NextRequest) {
     data: {
       name: parsed.data.name,
       trigger: parsed.data.trigger,
-      conditions: parsed.data.conditions ?? undefined,
-      actions: parsed.data.actions,
+      conditions: parsed.data.conditions ? asInputJson(parsed.data.conditions) : undefined,
+      actions: asInputJson(parsed.data.actions),
       enabled: parsed.data.enabled,
       organizationId: parsed.data.organizationId,
       communityId: parsed.data.communityId,

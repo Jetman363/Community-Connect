@@ -3,6 +3,7 @@ import { jsonOk, jsonError } from "@/lib/api/response";
 import { enterpriseAuth } from "@/lib/api/handlers/enterprise";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/prisma";
+import { asInputJson } from "@/lib/prisma-json";
 
 /** Agency configuration portal API — config versioning stub */
 export async function GET(req: NextRequest) {
@@ -63,8 +64,8 @@ export async function PATCH(req: NextRequest) {
   if (body.featureFlags) {
     await prisma.tenantBranding.upsert({
       where: { organizationId: orgId },
-      update: { featureFlags: body.featureFlags },
-      create: { organizationId: orgId, featureFlags: body.featureFlags },
+      update: { featureFlags: asInputJson(body.featureFlags) },
+      create: { organizationId: orgId, featureFlags: asInputJson(body.featureFlags) },
     });
   }
 

@@ -92,6 +92,50 @@ async function main() {
     });
   }
 
+  await prisma.userSocialLink.deleteMany({
+    where: { userId: { in: [resident.id, sarah.id, admin.id] } },
+  });
+
+  await prisma.userSocialLink.createMany({
+    data: [
+      {
+        userId: resident.id,
+        platform: "INSTAGRAM",
+        profileUrl: "https://instagram.com/alex_r",
+        username: "alex_r",
+        isPublic: true,
+      },
+      {
+        userId: resident.id,
+        platform: "FACEBOOK",
+        profileUrl: "https://facebook.com/alex.resident",
+        username: "alex.resident",
+        isPublic: true,
+      },
+      {
+        userId: resident.id,
+        platform: "LINKEDIN",
+        profileUrl: "https://linkedin.com/in/alex-resident",
+        username: "alex-resident",
+        isPublic: false,
+      },
+      {
+        userId: sarah.id,
+        platform: "INSTAGRAM",
+        profileUrl: "https://instagram.com/sarah_m",
+        username: "sarah_m",
+        isPublic: true,
+      },
+      {
+        userId: sarah.id,
+        platform: "TWITTER",
+        profileUrl: "https://x.com/sarah_m",
+        username: "sarah_m",
+        isPublic: true,
+      },
+    ],
+  });
+
   await prisma.post.deleteMany({ where: { communityId: community.id } });
 
   const post1 = await prisma.post.create({

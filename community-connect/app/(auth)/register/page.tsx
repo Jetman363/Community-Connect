@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -43,8 +44,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
-      <Card className="w-full max-w-md">
+    <AuthSplitLayout
+      headline="Join neighbors who stay informed"
+      subline="Create a free account to get alerts, RSVP to events, and connect locally."
+    >
+      <Card className="w-full max-w-md border-[var(--border)] shadow-lg">
         <CardHeader>
           <CardTitle>Create account</CardTitle>
           <CardDescription>Join your local community</CardDescription>
@@ -75,6 +79,6 @@ export default function RegisterPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AuthSplitLayout>
   );
 }

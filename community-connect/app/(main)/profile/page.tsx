@@ -11,6 +11,8 @@ import { getMockFeedPosts } from "@/lib/api/fallback";
 import { Settings, MapPin, Calendar, Award } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { CommunityImage } from "@/components/ui/community-image";
+import { communityPhotos } from "@/lib/images/community-photos";
 
 export default function ProfilePage() {
   const user = currentUser;
@@ -21,7 +23,16 @@ export default function ProfilePage() {
   return (
     <PageTransition>
       <div className="relative mb-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]">
-        <div className="h-32 bg-gradient-to-r from-[var(--muted)] to-[var(--border)]" />
+        <div className="relative h-32">
+          <CommunityImage
+            src={communityPhotos.hero.profile}
+            alt="Oak Hills neighborhood skyline"
+            fill
+            sizes="(max-width: 768px) 100vw, 1200px"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--card)] via-transparent to-black/20" />
+        </div>
         <div className="px-6 pb-6">
           <div className="-mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">

@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { MapPin, Eye, Bookmark, Tag, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CommunityImage } from "@/components/ui/community-image";
+import { communityPhotos } from "@/lib/images/community-photos";
 import type { MarketplaceListingDto } from "@/types/marketplace";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { cn } from "@/lib/utils";
 
 const typeLabels: Record<string, string> = {
@@ -44,7 +46,8 @@ export function MarketplaceListingCard({
   onToggleFavorite?: (id: string) => void;
   compact?: boolean;
 }) {
-  const image = listing.imageUrl ?? listing.imageGallery[0];
+  const image =
+    listing.imageUrl ?? listing.imageGallery[0] ?? communityPhotos.marketplace.patio;
   const saved = listing.favorited ?? false;
 
   return (
@@ -56,23 +59,26 @@ export function MarketplaceListingCard({
         compact && "flex gap-3"
       )}
     >
-      {image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={image}
-          alt=""
-          className={cn(compact ? "h-24 w-24 shrink-0 object-cover" : "h-44 w-full object-cover")}
-        />
-      ) : (
-        <div
-          className={cn(
-            "flex items-center justify-center bg-[var(--muted)]",
-            compact ? "h-24 w-24 shrink-0" : "h-44 w-full"
-          )}
-        >
-          <Tag className="h-8 w-8 text-[var(--muted-foreground)]" />
-        </div>
-      )}
+      <div
+        className={cn(
+          "relative shrink-0 overflow-hidden bg-[var(--muted)]",
+          compact ? "h-24 w-24" : "h-44 w-full"
+        )}
+      >
+        {image ? (
+          <CommunityImage
+            src={image}
+            alt={`Photo for listing: ${listing.title}`}
+            fill
+            sizes={compact ? "96px" : "(max-width: 640px) 100vw, 400px"}
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Tag className="h-8 w-8 text-[var(--muted-foreground)]" />
+          </div>
+        )}
+      </div>
       <div className={cn("p-4", compact && "min-w-0 flex-1 p-2")}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap gap-1">
@@ -124,7 +130,7 @@ export function MarketplaceListingCard({
           </span>
         </div>
         <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-          {listing.seller.displayName} · {formatRelative(listing.createdAt)}
+          {listing.seller.displayName} · <RelativeTime date={listing.createdAt} />
         </p>
       </div>
     </motion.article>

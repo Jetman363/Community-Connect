@@ -15,6 +15,9 @@ import { ReviewSection } from "@/components/marketplace/review-section";
 import { useBusinesses, businessCategories } from "@/hooks/use-businesses";
 import type { BusinessDto, ReviewDto } from "@/types/marketplace";
 import { fetchBusinessReviews } from "@/lib/api/client";
+import { PageHeroBanner } from "@/components/ui/page-hero-banner";
+import { CommunityImage } from "@/components/ui/community-image";
+import { communityPhotos } from "@/lib/images/community-photos";
 import { Search, Phone, MapPin, Star, ExternalLink } from "lucide-react";
 
 export default function ServicesPage() {
@@ -56,6 +59,13 @@ export default function ServicesPage() {
             </Button>
           </Link>
         }
+      />
+
+      <PageHeroBanner
+        src={communityPhotos.hero.services}
+        alt="Local corner store serving the neighborhood"
+        title="Support local businesses"
+        description="Verified shops, services, and professionals near you"
       />
 
       {source === "mock" && (
@@ -112,7 +122,19 @@ export default function ServicesPage() {
       )}
 
       {businesses.length === 0 && !loading && (
-        <p className="py-12 text-center text-[var(--muted-foreground)]">No businesses found</p>
+        <div className="flex flex-col items-center py-12 text-center">
+          <div className="relative mb-4 h-36 w-56 overflow-hidden rounded-2xl">
+            <CommunityImage
+              src={communityPhotos.empty.services}
+              alt="Local storefront in the neighborhood"
+              fill
+              sizes="224px"
+              className="object-cover"
+              rounded="2xl"
+            />
+          </div>
+          <p className="text-[var(--muted-foreground)]">No businesses found</p>
+        </div>
       )}
 
       <Modal

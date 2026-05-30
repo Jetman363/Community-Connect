@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { MockPost } from "@/lib/mock-data/posts";
 import { getUserById } from "@/lib/mock-data";
-import { formatRelative } from "@/lib/utils";
+import { CommunityImage } from "@/components/ui/community-image";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
@@ -53,7 +54,7 @@ export function FeedPostCard({ post }: { post: MockPost }) {
                 </Badge>
               </div>
               <span className="text-xs text-[var(--muted-foreground)]">
-                {formatRelative(post.createdAt)}
+                <RelativeTime date={post.createdAt} />
               </span>
             </div>
           </div>
@@ -79,8 +80,15 @@ export function FeedPostCard({ post }: { post: MockPost }) {
       </div>
 
       {post.imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.imageUrl} alt="" className="w-full max-h-80 object-cover" />
+        <div className="relative mx-0 h-80 max-h-80 w-full">
+          <CommunityImage
+            src={post.imageUrl}
+            alt="Photo attached to community post"
+            fill
+            sizes="(max-width: 768px) 100vw, 672px"
+            className="object-cover"
+          />
+        </div>
       )}
 
       {post.poll && (

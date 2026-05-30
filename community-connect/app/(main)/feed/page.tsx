@@ -7,6 +7,9 @@ import { FeedPostCard } from "@/components/cards/feed-post";
 import { PostComposer } from "@/components/feed/post-composer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeed } from "@/hooks/use-feed";
+import { PageHeroBanner } from "@/components/ui/page-hero-banner";
+import { CommunityImage } from "@/components/ui/community-image";
+import { communityPhotos } from "@/lib/images/community-photos";
 import { postCategories, type MockPost } from "@/lib/mock-data/posts";
 
 export default function FeedPage() {
@@ -34,6 +37,14 @@ export default function FeedPage() {
       <PageHeader
         title="Community Feed"
         description="Posts, polls, and updates from your neighbors"
+      />
+
+      <PageHeroBanner
+        src={communityPhotos.people.neighbors}
+        alt="Neighbors chatting outdoors in the community"
+        title="What's happening nearby"
+        description="Share updates, ask questions, and stay connected"
+        height="h-32 md:h-36"
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -88,9 +99,21 @@ export default function FeedPage() {
         )}
 
         {!loading && posts.length === 0 && (
-          <p className="py-8 text-center text-sm text-[var(--muted-foreground)]">
-            No posts yet — be the first to share!
-          </p>
+          <div className="flex flex-col items-center py-12 text-center">
+            <div className="relative mb-4 h-40 w-56 overflow-hidden rounded-2xl">
+              <CommunityImage
+                src={communityPhotos.empty.feed}
+                alt="Community gathering in a local park"
+                fill
+                sizes="224px"
+                className="object-cover"
+                rounded="2xl"
+              />
+            </div>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              No posts yet — be the first to share!
+            </p>
+          </div>
         )}
       </div>
     </PageTransition>

@@ -47,7 +47,7 @@ export default function ServicesPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {filtered.map((business) => (
-          <BusinessCard key={business.id} business={business} onClick={() => setSelected(business)} />
+          <BusinessCard key={business.id} business={business} onSelect={() => setSelected(business)} />
         ))}
       </div>
 

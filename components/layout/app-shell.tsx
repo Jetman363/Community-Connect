@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { AppHeader, MobileMenu } from "./header";
+import { AppHeader, MobileSearchBar } from "./header";
 import { MobileNav } from "./mobile-nav";
 import { Sidebar } from "./sidebar";
 import { ToastProvider } from "@/components/ui/toast";
 import { FloatingAssistant } from "@/components/ai/floating-assistant";
+import Link from "next/link";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <ToastProvider>
       <div className="min-h-screen bg-[var(--background)]">
-        <AppHeader onMenuToggle={() => setMenuOpen((o) => !o)} />
-        <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+        <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/95 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+            <Link href="/dashboard" className="shrink-0 font-semibold text-[var(--accent)]">
+              Community Connect
+            </Link>
+            <AppHeader />
+          </div>
+          <MobileSearchBar />
+        </header>
 
         <div className="mx-auto flex max-w-7xl gap-6 px-4 pb-24 pt-6 md:pb-6">
           <Sidebar />

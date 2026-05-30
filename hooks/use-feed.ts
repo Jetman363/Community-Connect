@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { FeedPost } from "@/types/feed";
-import { fetchFeed, createPost as apiCreatePost } from "@/lib/api/client";
+import { fetchFeed, createPost as apiCreatePost, ApiClientError } from "@/lib/api/client";
 import { SOCKET_EVENTS } from "@/lib/realtime/events";
 import { useSocket } from "@/hooks/use-socket";
 
@@ -24,6 +24,7 @@ export function useFeed(options: { category?: string; sort?: "latest" | "trendin
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [source, setSource] = useState<string>("db");
+  const [unauthorized, setUnauthorized] = useState(false);
   const { on } = useSocket();
 
   const load = useCallback(
@@ -32,6 +33,7 @@ export function useFeed(options: { category?: string; sort?: "latest" | "trendin
       else setLoading(true);
 
       try {
+        setUnauthorized(false);
         const category =
           options.category && options.category !== "all"
             ? CATEGORY_MAP[options.category] ?? options.category.toUpperCase()
@@ -47,8 +49,12 @@ export function useFeed(options: { category?: string; sort?: "latest" | "trendin
         setCursor(res.nextCursor);
         setHasMore(res.hasMore);
         setSource(res.source ?? "db");
-      } catch {
+      } catch (err) {
         if (!append) setPosts([]);
+        if (err instanceof ApiClientError && err.status === 401) {
+          setUnauthorized(true);
+          setSource("unauthorized");
+        }
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -113,6 +119,7 @@ export function useFeed(options: { category?: string; sort?: "latest" | "trendin
     addPost,
     updatePostLocal,
     source,
+    unauthorized,
     refresh: () => load(false),
   };
 }

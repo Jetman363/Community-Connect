@@ -1,4 +1,6 @@
 import type { FeedPost, ApiNotification, FeedComment } from "@/types/feed";
+import type { SocialLinkDto } from "@/types/social";
+import type { SocialPlatform } from "@prisma/client";
 
 export class ApiClientError extends Error {
   constructor(
@@ -268,4 +270,42 @@ export async function discoverSearch(params: {
 
 export async function fetchRecommendations(): Promise<SearchRecommendationsDto & { source?: string }> {
   return apiFetch("/api/recommendations");
+}
+
+// ─── Social links ────────────────────────────────────────────────────────────
+
+export async function fetchMySocialLinks(): Promise<{ items: SocialLinkDto[] }> {
+  return apiFetch("/api/users/me/social-links");
+}
+
+export async function fetchPublicSocialLinks(userId: string): Promise<{ items: SocialLinkDto[] }> {
+  return apiFetch(`/api/users/${userId}/social-links`);
+}
+
+export async function connectSocialLink(body: {
+  platform: SocialPlatform;
+  profileUrl: string;
+  username?: string;
+  isPublic?: boolean;
+}) {
+  return apiFetch<{ link: SocialLinkDto; oauth: string }>("/api/users/me/social-links/connect", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function disconnectSocialLink(platform: SocialPlatform) {
+  return apiFetch(`/api/users/me/social-links/disconnect?platform=${platform}`, {
+    method: "DELETE",
+  });
+}
+
+export async function patchSocialLinks(body: {
+  isPublic?: boolean;
+  platforms?: { platform: SocialPlatform; isPublic: boolean }[];
+}) {
+  return apiFetch<{ items: SocialLinkDto[] }>("/api/users/me/social-links", {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }

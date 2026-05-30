@@ -622,6 +622,7 @@ model User {
   userInterests        UserInterest[]
   dailyCheckIns        DailyCheckIn[]
   personalizationProfile PersonalizationProfile?
+  socialLinks            UserSocialLink[]
 
   @@index([role])
 }
@@ -2114,4 +2115,28 @@ model PersonalizationProfile {
   interests   Json     @default("[]")
   preferences Json     @default("{}")
   updatedAt   DateTime @updatedAt
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TIKTOK
+  TWITTER
+  LINKEDIN
+  YOUTUBE
+}
+
+model UserSocialLink {
+  id         String         @id @default(cuid())
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform   SocialPlatform
+  profileUrl String
+  username   String?
+  connectedAt DateTime      @default(now())
+  isPublic   Boolean        @default(true)
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([userId, platform])
+  @@index([userId])
 }

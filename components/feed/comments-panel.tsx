@@ -71,7 +71,13 @@ function CommentItem({
   );
 }
 
-export function CommentsPanel({ postId }: { postId: string }) {
+export function CommentsPanel({
+  postId,
+  onCommentAdded,
+}: {
+  postId: string;
+  onCommentAdded?: () => void;
+}) {
   const [comments, setComments] = useState<FeedComment[]>([]);
   const [content, setContent] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -89,11 +95,10 @@ export function CommentsPanel({ postId }: { postId: string }) {
     setSubmitting(true);
     try {
       const comment = await createComment(postId, content.trim(), replyTo ?? undefined);
-      if (replyTo) {
-        setComments((prev) => prev);
-      } else {
+      if (!replyTo) {
         setComments((prev) => [...prev, comment]);
       }
+      onCommentAdded?.();
       setContent("");
       setReplyTo(null);
     } finally {

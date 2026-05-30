@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { ConnectorCategory } from "@prisma/client";
 import type { BaseConnector, ConnectorFactory } from "./base-connector";
-import type { ConnectorContext, ConnectorDefinition, ConnectorInstance, TenantScope } from "./types";
+import type { ConnectorContext } from "./base-connector";
+import type { ConnectorDefinition, ConnectorInstance, TenantScope } from "./types";
 import { MockCadConnector } from "./connectors/cad/mock-cad-connector";
 import { GenericCadAdapter } from "./connectors/cad/generic-cad-adapter";
 import { MockRmsConnector } from "./connectors/rms/mock-rms-connector";

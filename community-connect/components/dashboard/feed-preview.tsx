@@ -4,10 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { FeedPostCard } from "@/components/cards/feed-post";
-import { mockPosts } from "@/lib/mock-data";
+import { getMockFeedPosts } from "@/lib/api/fallback";
 
 export function FeedPreview() {
-  const posts = mockPosts.slice(0, 2);
+  const posts = getMockFeedPosts().slice(0, 2);
 
   return (
     <section>

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePersonalization } from "@/hooks/use-personalization";
+import { ConnectedAccountsSettings } from "@/components/social/connected-accounts-settings";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -191,12 +192,12 @@ export default function SettingsPage() {
           </div>
         </SettingsSection>
 
-        <SettingsSection icon={Link2} title="Connected Accounts" description="Linked social and service accounts">
-          <div className="space-y-3">
-            <ConnectedRow provider="Google" connected />
-            <ConnectedRow provider="Apple" />
-            <ConnectedRow provider="Facebook" />
-          </div>
+        <SettingsSection
+          icon={Link2}
+          title="Connected Accounts"
+          description="Link social profiles shown on your public profile"
+        >
+          <ConnectedAccountsSettings />
         </SettingsSection>
       </div>
     </PageTransition>
@@ -238,17 +239,6 @@ function ToggleRow({ label, defaultChecked }: { label: string; defaultChecked?: 
       <span className="text-sm">{label}</span>
       <input type="checkbox" defaultChecked={defaultChecked} className="h-4 w-4 accent-[var(--accent)]" />
     </label>
-  );
-}
-
-function ConnectedRow({ provider, connected }: { provider: string; connected?: boolean }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3">
-      <span className="text-sm font-medium">{provider}</span>
-      <Button size="sm" variant={connected ? "secondary" : "outline"}>
-        {connected ? "Connected" : "Connect"}
-      </Button>
-    </div>
   );
 }
 

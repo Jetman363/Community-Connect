@@ -11,7 +11,7 @@ import { useAlerts } from "@/hooks/use-alerts";
 import type { SafetyAlertDto } from "@/types/safety";
 import { MapPin, Clock, Radio, Search } from "lucide-react";
 import { formatRelative } from "@/lib/utils";
-import { MapCanvas } from "@/components/map/map-canvas";
+import { MapCanvasDynamic } from "@/components/map/map-canvas-dynamic";
 import { useMapMarkers } from "@/hooks/use-map-markers";
 
 const CATEGORIES = [
@@ -64,7 +64,7 @@ export default function AlertsPage() {
       />
 
       <div className="mb-6 overflow-hidden rounded-2xl">
-        <MapCanvas markers={markers} className="h-48" onMarkerClick={(m) => {
+        <MapCanvasDynamic markers={markers} className="h-48" onMarkerClick={(m) => {
           const a = items.find((i) => i.id === m.id);
           if (a) setSelected(a);
         }} />

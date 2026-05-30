@@ -35,13 +35,19 @@ export function requireAuth(
   return { payload };
 }
 
+function sessionMaxAgeSeconds(): number {
+  const raw = process.env.SESSION_MAX_AGE_SECONDS;
+  const parsed = raw ? Number.parseInt(raw, 10) : 604_800;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 604_800;
+}
+
 export function setAuthCookie(res: NextResponse, token: string): void {
   res.cookies.set(AUTH_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: sessionMaxAgeSeconds(),
   });
 }
 

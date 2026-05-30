@@ -13,12 +13,14 @@ import {
 import { mockNotifications, currentUser } from "@/lib/mock-data";
 import { formatRelative } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { CommunitySwitcher } from "@/components/layout/community-switcher";
 
 export function AppHeader() {
   const unread = mockNotifications.filter((n) => !n.read).length;
 
   return (
     <div className="hidden md:flex flex-1 items-center gap-4 max-w-2xl mx-8">
+      <CommunitySwitcher />
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
         <Input

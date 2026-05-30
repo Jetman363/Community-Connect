@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/components/providers/theme-provider";
 import { currentUser } from "@/lib/mock-data";
 import { useToast } from "@/components/ui/toast";
+import { apiFetch } from "@/lib/api/client";
 import {
   User,
   Bell,
@@ -18,12 +20,71 @@ import {
   Moon,
   Sun,
   Monitor,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [deleteEmail, setDeleteEmail] = useState("");
+
+  useEffect(() => {
+    void apiFetch<{ mfaEnabled: boolean }>("/api/users/me/mfa")
+      .then((d) => setMfaEnabled(d.mfaEnabled))
+      .catch(() => undefined);
+  }, []);
+
+  async function toggleMfa() {
+    try {
+      const res = await apiFetch<{ mfaEnabled?: boolean; message?: string; status?: string }>(
+        "/api/users/me/mfa",
+        { method: "PATCH", body: JSON.stringify({ enabled: !mfaEnabled }) }
+      );
+      if (res.status === "setup_required") {
+        toast(res.message ?? "MFA setup required", "info");
+      } else {
+        setMfaEnabled(res.mfaEnabled ?? false);
+        toast(mfaEnabled ? "MFA disabled" : "MFA enabled", "success");
+      }
+    } catch {
+      toast("MFA update failed", "error");
+    }
+  }
+
+  async function exportData() {
+    try {
+      const data = await apiFetch<unknown>("/api/users/me/export");
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "community-connect-export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("Data export downloaded", "success");
+    } catch {
+      toast("Export failed — sign in required", "error");
+    }
+  }
+
+  async function requestDeletion() {
+    if (!deleteEmail) {
+      toast("Enter your email to confirm", "error");
+      return;
+    }
+    try {
+      await apiFetch("/api/users/me/delete", {
+        method: "POST",
+        body: JSON.stringify({ confirmEmail: deleteEmail }),
+      });
+      toast("Deletion request submitted (30-day grace period)", "info");
+    } catch {
+      toast("Deletion request failed", "error");
+    }
+  }
 
   return (
     <PageTransition>
@@ -92,11 +153,35 @@ export default function SettingsPage() {
             <Button variant="outline" className="w-full justify-start">
               Change Password
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Two-Factor Authentication
+            <Button variant="outline" className="w-full justify-start" onClick={() => void toggleMfa()}>
+              Two-Factor Authentication {mfaEnabled ? "(enabled)" : "(disabled)"}
             </Button>
             <Button variant="outline" className="w-full justify-start">
               Active Sessions
+            </Button>
+          </div>
+        </SettingsSection>
+
+        <SettingsSection icon={Shield} title="Privacy & Data" description="Export or delete your account data">
+          <div className="space-y-4">
+            <Button variant="outline" className="w-full justify-start" onClick={() => void exportData()}>
+              <Download className="mr-2 h-4 w-4" />
+              Download my data (GDPR export)
+            </Button>
+            <Separator />
+            <div className="grid gap-2">
+              <Label htmlFor="delete-email">Confirm email to request account deletion</Label>
+              <Input
+                id="delete-email"
+                type="email"
+                placeholder="your@email.com"
+                value={deleteEmail}
+                onChange={(e) => setDeleteEmail(e.target.value)}
+              />
+            </div>
+            <Button variant="danger" className="w-full justify-start" onClick={() => void requestDeletion()}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Request account deletion
             </Button>
           </div>
         </SettingsSection>

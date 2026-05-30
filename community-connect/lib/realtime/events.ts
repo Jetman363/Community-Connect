@@ -15,4 +15,9 @@ export const SOCKET_EVENTS = {
   REVIEW_NEW: "review:new",
   INQUIRY_NEW: "inquiry:new",
   BUSINESS_ACTIVITY: "business:activity",
+  TASK_ASSIGNED: "task:assigned",
+  MODERATION_CASE_NEW: "moderation:case:new",
+  MODERATION_CASE_UPDATE: "moderation:case:update",
+  BROADCAST_SENT: "broadcast:sent",
+  OPS_INCIDENT_UPDATE: "ops:incident:update",
 } as const;

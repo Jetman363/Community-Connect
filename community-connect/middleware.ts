@@ -3,6 +3,15 @@ import type { NextRequest } from "next/server";
 import { AUTH_COOKIE } from "@/lib/auth";
 import { verifyTokenEdge } from "@/lib/auth/jwt-edge";
 import { adminRoutes, protectedRoutes } from "@/config/routes";
+import { hasMinRole } from "@/lib/permissions/rbac";
+import { buildSecurityHeaders } from "@/lib/security/headers";
+
+function withSecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(buildSecurityHeaders())) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -10,7 +19,7 @@ export async function middleware(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
 
-  if (!isProtected) return NextResponse.next();
+  if (!isProtected) return withSecurityHeaders(NextResponse.next());
 
   const token = request.cookies.get(AUTH_COOKIE)?.value;
   const payload = token ? await verifyTokenEdge(token) : null;
@@ -20,19 +29,23 @@ export async function middleware(request: NextRequest) {
     if (request.cookies.has(AUTH_COOKIE)) {
       login.searchParams.set("auth", "failed");
     }
-    return NextResponse.redirect(login);
+    return withSecurityHeaders(NextResponse.redirect(login));
   }
 
   const isAdminRoute = adminRoutes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
   if (isAdminRoute) {
-    if (payload.role !== "ADMIN" && payload.role !== "MODERATOR") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    const opsOnly = pathname.startsWith("/admin/ops");
+    const allowed = opsOnly
+      ? hasMinRole(payload.role, "PUBLIC_SAFETY")
+      : hasMinRole(payload.role, "MODERATOR");
+    if (!allowed) {
+      return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
     }
   }
 
-  return NextResponse.next();
+  return withSecurityHeaders(NextResponse.next());
 }
 
 export const config = {

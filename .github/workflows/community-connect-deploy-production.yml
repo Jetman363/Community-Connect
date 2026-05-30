@@ -1,0 +1,49 @@
+name: Deploy Community Connect (Production)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "community-connect-v*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: community-connect
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install
+        run: npm ci
+
+      - name: Prisma validate
+        run: npx prisma validate
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Security audit
+        run: npm audit --audit-level=high || true
+
+      # ─── Vercel production (placeholder) ──────────────────────────────────
+      # - name: Deploy to Vercel Production
+      #   uses: amondnet/vercel-action@v25
+      #   with:
+      #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
+      #     vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+      #     vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      #     vercel-args: '--prod'
+      #     working-directory: community-connect
+
+      - name: Deploy placeholder
+        run: echo "Production deploy — configure secrets and uncomment Vercel step"

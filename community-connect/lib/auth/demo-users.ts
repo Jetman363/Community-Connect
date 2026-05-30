@@ -18,6 +18,30 @@ const DEMO_USERS: Record<
     displayName: "Alex Resident",
     verified: true,
   },
+  "safety@communityconnect.app": {
+    id: "demo-safety",
+    role: "PUBLIC_SAFETY",
+    displayName: "Oak Hills PD",
+    verified: true,
+  },
+  "hoa@communityconnect.app": {
+    id: "demo-hoa",
+    role: "HOA_MANAGER",
+    displayName: "HOA Board",
+    verified: true,
+  },
+  "dispatch@communityconnect.app": {
+    id: "demo-dispatch",
+    role: "DISPATCHER",
+    displayName: "Dispatch Center",
+    verified: true,
+  },
+  "super@communityconnect.app": {
+    id: "demo-super",
+    role: "SUPER_ADMIN",
+    displayName: "Super Admin",
+    verified: true,
+  },
 };
 
 /** Dev-only fallback when PostgreSQL is unavailable (matches seed credentials). */

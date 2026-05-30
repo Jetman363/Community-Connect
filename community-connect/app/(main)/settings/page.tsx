@@ -114,13 +114,19 @@ export default function SettingsPage() {
           </div>
         </SettingsSection>
 
-        <SettingsSection icon={Bell} title="Notifications" description="Control how you receive alerts">
+        <SettingsSection
+          id="notifications"
+          icon={Bell}
+          title="Notifications"
+          description="Control how you receive alerts"
+        >
           <div className="space-y-3">
             <ToggleRow label="Emergency alerts" defaultChecked />
             <ToggleRow label="Community posts" defaultChecked />
             <ToggleRow label="Event reminders" defaultChecked />
             <ToggleRow label="Marketplace messages" />
             <ToggleRow label="Email digest" defaultChecked />
+            <QuietHoursToggle />
           </div>
         </SettingsSection>
 
@@ -204,19 +210,47 @@ export default function SettingsPage() {
   );
 }
 
+function QuietHoursToggle() {
+  const { toast } = useToast();
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    setOn(localStorage.getItem("cc_quiet_hours") === "1");
+  }, []);
+
+  return (
+    <label className="flex items-center justify-between rounded-xl px-3 py-2 hover:bg-[var(--muted)]">
+      <span className="text-sm">Quiet hours (10pm–7am)</span>
+      <input
+        type="checkbox"
+        checked={on}
+        onChange={(e) => {
+          const v = e.target.checked;
+          setOn(v);
+          localStorage.setItem("cc_quiet_hours", v ? "1" : "0");
+          toast(v ? "Quiet hours enabled" : "Quiet hours disabled", "success");
+        }}
+        className="h-4 w-4 accent-[var(--accent)]"
+      />
+    </label>
+  );
+}
+
 function SettingsSection({
   icon: Icon,
   title,
   description,
   children,
+  id,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
   children: React.ReactNode;
+  id?: string;
 }) {
   return (
-    <Card>
+    <Card id={id}>
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--muted)]">

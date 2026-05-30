@@ -52,18 +52,17 @@ export const sidebarNav: NavItem[] = [
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/assistant", label: "AI Assistant", icon: Bot },
   { href: "/admin", label: "Admin", icon: Shield, adminOnly: true },
+  { href: "/admin/launch", label: "Launch", icon: LayoutDashboard, adminOnly: true },
   { href: "/admin/ops", label: "Ops", icon: Map, adminOnly: true },
 ];
 
-/**
- * Mobile bottom nav (5 items max).
- * Events & Alerts moved to sidebar/drawer — accessible via hamburger menu on mobile.
- */
+/** Mobile bottom nav — 6 compact items (v1.0) */
 export const mobileNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/discover", label: "Discover", icon: Compass },
-  { href: "/marketplace", label: "Marketplace", Icon: MobileNavIcon },
+  { href: "/marketplace", label: "Market", Icon: MobileNavIcon },
   { href: "/groups", label: "Groups", icon: Users },
+  { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/profile", label: "Profile", icon: User },
 ];
 

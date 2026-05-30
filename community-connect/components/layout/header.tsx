@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Search, Settings, User, LogOut, Shield } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { Bell, Settings, User, LogOut, Shield, Moon, Sparkles } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { SearchLinkInput } from "@/components/layout/search-link";
 import {
   Dropdown,
   DropdownItem,
@@ -15,19 +16,32 @@ import { RelativeTime } from "@/components/ui/relative-time";
 import { Badge } from "@/components/ui/badge";
 import { CommunitySwitcher } from "@/components/layout/community-switcher";
 
+function sortNotificationsByPriority<T extends { read: boolean; type?: string; createdAt: string }>(
+  items: T[]
+): T[] {
+  const priority = (n: T) => {
+    if (!n.read && n.type === "alert") return 0;
+    if (!n.read && n.type === "safety") return 1;
+    if (!n.read) return 2;
+    return 3;
+  };
+  return [...items].sort((a, b) => priority(a) - priority(b) || b.createdAt.localeCompare(a.createdAt));
+}
+
 export function AppHeader() {
   const unread = mockNotifications.filter((n) => !n.read).length;
+  const sorted = sortNotificationsByPriority(mockNotifications);
+  const [quietHours, setQuietHours] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("cc_quiet_hours");
+    if (stored === "1") setQuietHours(true);
+  }, []);
 
   return (
     <div className="hidden md:flex flex-1 items-center gap-4 max-w-2xl mx-8">
       <CommunitySwitcher />
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-        <Input
-          placeholder="What do you need today?"
-          className="pl-10 bg-[var(--muted)] border-transparent focus:border-[var(--border)]"
-        />
-      </div>
+      <SearchLinkInput />
 
       <Dropdown
         trigger={
@@ -43,9 +57,17 @@ export function AppHeader() {
         align="end"
         className="shrink-0"
       >
-        <div className="px-4 py-2 font-medium text-sm">Notifications</div>
+        <div className="flex items-center justify-between px-4 py-2">
+          <span className="font-medium text-sm">Notifications</span>
+          <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
+            <Sparkles className="h-3 w-3" /> AI sorted
+          </span>
+        </div>
+        <div className="px-4 pb-2 text-xs text-[var(--muted-foreground)] border-b border-[var(--border)]">
+          <span className="font-medium text-foreground">Daily digest</span> — 3 updates in your area
+        </div>
         <DropdownSeparator />
-        {mockNotifications.slice(0, 4).map((n) => (
+        {sorted.slice(0, 4).map((n) => (
           <DropdownItem key={n.id} href={n.href}>
             <div className="flex flex-col gap-0.5 text-left">
               <span className="font-medium">{n.title}</span>
@@ -60,6 +82,9 @@ export function AppHeader() {
         ))}
         <DropdownSeparator />
         <DropdownItem href="/alerts">View all notifications</DropdownItem>
+        <DropdownItem href="/settings#notifications" icon={Moon}>
+          Quiet hours {quietHours ? "on" : "off"} — settings
+        </DropdownItem>
       </Dropdown>
 
       <Dropdown
@@ -102,12 +127,8 @@ export function AppHeader() {
 
 export function MobileSearchBar() {
   return (
-    <div className="relative md:hidden px-4 pb-3">
-      <Search className="absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-      <Input
-        placeholder="What do you need today?"
-        className="pl-10 bg-[var(--muted)] border-transparent"
-      />
+    <div className="md:hidden px-4 pb-3">
+      <SearchLinkInput />
     </div>
   );
 }

@@ -4,10 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { AlertCard } from "@/components/cards/alert-card";
-import { mockAlerts } from "@/lib/mock-data";
+import { getMockSafetyAlerts } from "@/lib/api/fallback-safety";
 
 export function AlertsPanel() {
-  const alerts = mockAlerts.filter((a) => a.active).slice(0, 3);
+  const alerts = getMockSafetyAlerts().filter((a) => a.active).slice(0, 3);
 
   return (
     <section>

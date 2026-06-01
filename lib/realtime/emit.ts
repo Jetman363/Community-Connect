@@ -21,3 +21,13 @@ export function emitToCommunity(communityId: string, event: string, payload: unk
 export function emitToUser(userId: string, event: string, payload: unknown) {
   io?.to(`user:${userId}`).emit(event, payload);
 }
+
+export function emitToGeofence(geofenceId: string, event: string, payload: unknown) {
+  io?.to(`geofence:${geofenceId}`).emit(event, payload);
+}
+
+export function emitToRooms(rooms: string[], event: string, payload: unknown) {
+  for (const room of rooms) {
+    io?.to(room).emit(event, payload);
+  }
+}

@@ -83,6 +83,7 @@ export const config = {
     "/messages",
     "/settings",
     "/onboarding",
+    "/onboarding/:path*",
     "/dashboard/:path*",
     "/feed/:path*",
     "/discover/:path*",

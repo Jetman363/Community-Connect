@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { email, password, displayName, role } = parsed.data;
+  const { email, password, displayName, firstName, lastName, username, avatarUrl, role } = parsed.data;
+  const resolvedDisplayName =
+    displayName ?? (firstName && lastName ? `${firstName} ${lastName}` : firstName ?? "Neighbor");
 
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -24,13 +26,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
+    if (username) {
+      const existingUsername = await prisma.user.findUnique({ where: { username } });
+      if (existingUsername) {
+        return NextResponse.json({ error: "Username already taken" }, { status: 409 });
+      }
+    }
+
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
         email,
+        username,
         passwordHash,
         role,
-        profile: { create: { displayName } },
+        profile: {
+          create: {
+            displayName: resolvedDisplayName,
+            firstName,
+            lastName,
+            avatarUrl,
+          },
+        },
       },
       include: { profile: true },
     });

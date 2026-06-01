@@ -3,7 +3,11 @@ import { z } from "zod";
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),
-  displayName: z.string().min(2).max(64),
+  displayName: z.string().min(2).max(64).optional(),
+  firstName: z.string().min(1).max(32).optional(),
+  lastName: z.string().min(1).max(32).optional(),
+  username: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_]+$/).optional(),
+  avatarUrl: z.string().url().optional(),
   role: z
     .enum([
       "RESIDENT",

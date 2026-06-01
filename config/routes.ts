@@ -16,6 +16,9 @@ export const protectedRoutes = [
   "/businesses",
   "/messages",
   "/settings",
+  "/discover",
+  "/groups",
+  "/onboarding",
 ] as const;
 
 /** Routes restricted to admin/moderator roles. */

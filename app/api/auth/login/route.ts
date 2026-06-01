@@ -1,10 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signToken } from "@/lib/auth";
+import { authenticateDemoUser, isDemoEmail } from "@/lib/auth/demo-users";
 import { loginSchema } from "@/lib/validations";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { setAuthCookie } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit";
+import { withDbTimeout } from "@/lib/db/timeout";
+
+function loginResponse(user: {
+  id: string;
+  email: string;
+  role: Parameters<typeof signToken>[0]["role"];
+  verified: boolean;
+  displayName?: string;
+}) {
+  const token = signToken({
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+    verified: user.verified,
+  });
+
+  const res = NextResponse.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      displayName: user.displayName,
+    },
+  });
+  setAuthCookie(res, token);
+  logAudit({ actorId: user.id, action: "user.login", resource: user.id });
+  return res;
+}
 
 export async function POST(req: NextRequest) {
   const rl = rateLimit(clientKey(req, "login"), 20, 60_000);
@@ -19,34 +48,37 @@ export async function POST(req: NextRequest) {
   const { email, password } = parsed.data;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { profile: true },
-    });
+    const user = await withDbTimeout(
+      prisma.user.findUnique({
+        where: { email },
+        include: { profile: true },
+      })
+    );
 
     if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = signToken({
-      sub: user.id,
+    return loginResponse({
+      id: user.id,
       email: user.email,
       role: user.role,
       verified: user.verified,
+      displayName: user.profile?.displayName,
     });
-
-    const res = NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        displayName: user.profile?.displayName,
-      },
-    });
-    setAuthCookie(res, token);
-    await logAudit({ actorId: user.id, action: "user.login", resource: user.id });
-    return res;
   } catch {
-    return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
+    const demoUser = authenticateDemoUser(email, password);
+    if (demoUser) {
+      return loginResponse(demoUser);
+    }
+
+    if (isDemoEmail(email)) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    return NextResponse.json(
+      { error: "Database unavailable. Copy .env.example to .env and run migrations, or use demo credentials in dev." },
+      { status: 503 }
+    );
   }
 }

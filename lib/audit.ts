@@ -1,15 +1,16 @@
 import { prisma } from "@/lib/prisma";
+import { withDbTimeout } from "@/lib/db/timeout";
 import type { Prisma } from "@prisma/client";
 
-export async function logAudit(params: {
+export function logAudit(params: {
   actorId?: string;
   action: string;
   resource?: string;
   metadata?: Prisma.InputJsonValue;
   ip?: string;
-}): Promise<void> {
-  try {
-    await prisma.auditLog.create({
+}): void {
+  void withDbTimeout(
+    prisma.auditLog.create({
       data: {
         actorId: params.actorId,
         action: params.action,
@@ -17,8 +18,9 @@ export async function logAudit(params: {
         metadata: params.metadata ?? undefined,
         ip: params.ip,
       },
-    });
-  } catch {
+    }),
+    3000
+  ).catch(() => {
     // Non-blocking if DB unavailable
-  }
+  });
 }

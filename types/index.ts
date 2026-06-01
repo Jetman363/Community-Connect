@@ -1,6 +1,28 @@
-import type { UserRole, PostCategory, AlertSeverity, ReportStatus, ListingType } from "@prisma/client";
+import type {
+  UserRole,
+  PostCategory,
+  AlertSeverity,
+  ReportStatus,
+  ListingType,
+  ListingStatus,
+  RsvpStatus,
+  MessageType,
+  NotificationType,
+  HoaDocumentCategory,
+} from "@prisma/client";
 
-export type { UserRole, PostCategory, AlertSeverity, ReportStatus, ListingType };
+export type {
+  UserRole,
+  PostCategory,
+  AlertSeverity,
+  ReportStatus,
+  ListingType,
+  ListingStatus,
+  RsvpStatus,
+  MessageType,
+  NotificationType,
+  HoaDocumentCategory,
+};
 
 export interface AuthUser {
   id: string;
@@ -20,4 +42,11 @@ export interface Paginated<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface Phase2StubResponse {
+  error: "Not implemented";
+  resource: string;
+  methods: string[];
+  message: string;
 }

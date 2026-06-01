@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
+import { withDbTimeout } from "@/lib/db/timeout";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: auth.payload.sub },
-      include: { profile: true },
-    });
+    const user = await withDbTimeout(
+      prisma.user.findUnique({
+        where: { id: auth.payload.sub },
+        include: { profile: true },
+      })
+    );
     if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({
       id: user.id,

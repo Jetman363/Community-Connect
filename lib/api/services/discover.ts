@@ -9,6 +9,7 @@ export interface DiscoverResult {
   jobs: JobListingDto[];
 }
 
+/** Marketplace/business/job search — Phase 5 */
 export async function discoverSearch(input: {
   communityId: string;
   q?: string;
@@ -62,3 +63,5 @@ export async function discoverSearch(input: {
     jobs: jobsRes.items,
   };
 }
+
+export { getDiscoverFeed, getTrending, listChallenges, joinChallenge, listNews } from "./discover-feed";

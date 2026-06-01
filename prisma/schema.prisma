@@ -441,6 +441,43 @@ enum CredentialType {
   BASIC
 }
 
+enum GroupMemberRole {
+  MODERATOR
+  MEMBER
+}
+
+enum DealType {
+  PERCENTAGE
+  FIXED
+  BOGO
+  FREEBIE
+}
+
+enum TrendingEntityType {
+  POST
+  GROUP
+  DEAL
+  EVENT
+  NEWS
+  CHALLENGE
+}
+
+enum TrendingPeriod {
+  DAY
+  WEEK
+  MONTH
+}
+
+enum PointReason {
+  CHECK_IN
+  POST
+  CHALLENGE
+  DEAL_REDEMPTION
+  ACHIEVEMENT
+  REFERRAL
+  OTHER
+}
+
 // ─── Core ────────────────────────────────────────────────────────────────────
 
 model Community {
@@ -486,6 +523,11 @@ model Community {
   dailyMetrics         DailyCommunityMetrics[]
   dailySafetyMetrics   DailySafetyMetrics[]
   integrationConnectors IntegrationConnector[]
+  communityGroups      CommunityGroup[]
+  localDeals           LocalDeal[]
+  newsArticles         NewsArticle[]
+  communityChallenges  CommunityChallenge[]
+  trendingItems        TrendingItem[]
 
   @@index([active])
   @@index([organizationId])
@@ -570,6 +612,16 @@ model User {
   watchAreas           WatchArea[]
   locationHistory      LocationHistory[]
   mapLayerPreference   MapLayerPreference?
+  groupMemberships     GroupMember[]
+  savedDeals           SavedDeal[]
+  dealRedemptions      DealRedemption[]
+  communityPoints      CommunityPoints?
+  pointTransactions    PointTransaction[]
+  userAchievements     UserAchievement[]
+  challengeParticipations ChallengeParticipation[]
+  userInterests        UserInterest[]
+  dailyCheckIns        DailyCheckIn[]
+  personalizationProfile PersonalizationProfile?
 
   @@index([role])
 }
@@ -621,6 +673,7 @@ model Post {
   reactions   Reaction[]
   savedBy     SavedPost[]
   mediaUploads MediaUpload[]
+  groupPosts   GroupPost[]
 
   @@index([communityId, createdAt(sort: Desc)])
   @@index([communityId, category, createdAt(sort: Desc)])
@@ -961,6 +1014,7 @@ model Business {
   verificationRequests  VerificationRequest[]
   promotions            Promotion[]
   analytics             BusinessAnalytics?
+  localDeals            LocalDeal[]
 
   @@index([communityId, category])
   @@index([communityId, verified])
@@ -1829,4 +1883,235 @@ model OrganizationOnboarding {
   progress       Json
   completedAt    DateTime?
   updatedAt      DateTime     @updatedAt
+}
+
+// ─── Phase 10: Engagement & Lifestyle ────────────────────────────────────────
+
+model CommunityGroup {
+  id          String    @id @default(cuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  name        String
+  category    String
+  description String?
+  coverPhoto  String?
+  memberCount Int       @default(0)
+  isPrivate   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  members GroupMember[]
+  posts   GroupPost[]
+
+  @@index([communityId, category])
+  @@index([communityId, memberCount(sort: Desc)])
+}
+
+model GroupMember {
+  id       String          @id @default(cuid())
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId  String
+  group    CommunityGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  role     GroupMemberRole @default(MEMBER)
+  joinedAt DateTime        @default(now())
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model GroupPost {
+  id        String         @id @default(cuid())
+  groupId   String
+  group     CommunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?          @relation(fields: [postId], references: [id], onDelete: SetNull)
+  content   String?
+  createdAt DateTime       @default(now())
+
+  @@index([groupId, createdAt(sort: Desc)])
+  @@index([postId])
+}
+
+model LocalDeal {
+  id            String    @id @default(cuid())
+  communityId   String
+  community     Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  businessId    String
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  discount      String
+  dealType      DealType  @default(PERCENTAGE)
+  expiresAt     DateTime
+  redeemedCount Int       @default(0)
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+
+  savedDeals  SavedDeal[]
+  redemptions DealRedemption[]
+
+  @@index([communityId, expiresAt])
+  @@index([businessId])
+}
+
+model SavedDeal {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId    String
+  deal      LocalDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, dealId])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model DealRedemption {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId     String
+  deal       LocalDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  code       String?
+  redeemedAt DateTime  @default(now())
+
+  @@index([userId, redeemedAt(sort: Desc)])
+  @@index([dealId])
+}
+
+model CommunityPoints {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Int      @default(0)
+  level     Int      @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+model PointTransaction {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    PointReason
+  createdAt DateTime    @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model Achievement {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  title       String
+  description String
+  icon        String?
+  points      Int     @default(0)
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  earnedAt      DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model CommunityChallenge {
+  id               String    @id @default(cuid())
+  communityId      String
+  community        Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  title            String
+  description      String
+  endDate          DateTime
+  participantCount Int       @default(0)
+  milestone        Int
+  imageUrl         String?
+  createdAt        DateTime  @default(now())
+
+  participations ChallengeParticipation[]
+
+  @@index([communityId, endDate])
+}
+
+model ChallengeParticipation {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId String
+  challenge   CommunityChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  progress    Int                @default(0)
+  joinedAt    DateTime           @default(now())
+
+  @@unique([userId, challengeId])
+  @@index([challengeId])
+}
+
+model NewsArticle {
+  id          String    @id @default(cuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  title       String
+  source      String
+  summary     String
+  category    String
+  publishedAt DateTime
+  imageUrl    String?
+  url         String?
+  createdAt   DateTime  @default(now())
+
+  @@index([communityId, publishedAt(sort: Desc)])
+  @@index([communityId, category])
+}
+
+model UserInterest {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic  String
+
+  @@unique([userId, topic])
+  @@index([userId])
+}
+
+model DailyCheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  streak    Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId, date(sort: Desc)])
+}
+
+model TrendingItem {
+  id          String             @id @default(cuid())
+  communityId String?
+  community   Community?         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  entityType  TrendingEntityType
+  entityId    String
+  score       Float
+  period      TrendingPeriod     @default(DAY)
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([entityType, entityId, period, communityId])
+  @@index([communityId, period, score(sort: Desc)])
+}
+
+model PersonalizationProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interests   Json     @default("[]")
+  preferences Json     @default("{}")
+  updatedAt   DateTime @updatedAt
 }

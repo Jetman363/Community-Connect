@@ -6,12 +6,14 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { sidebarNav } from "@/config/navigation";
 import { currentUser } from "@/lib/mock-data";
+import { usePersonalization } from "@/hooks/use-personalization";
 
 export function Sidebar() {
   const pathname = usePathname();
   const isAdmin = currentUser.role === "ADMIN" || currentUser.role === "MODERATOR";
-
-  const items = sidebarNav.filter((item) => !item.adminOnly || isAdmin);
+  const { navigation } = usePersonalization();
+  const ranked = navigation?.sidebar ?? sidebarNav;
+  const items = ranked.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <aside className="hidden w-60 shrink-0 lg:block">

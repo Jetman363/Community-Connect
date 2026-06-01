@@ -4,14 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { mobileNav } from "@/config/navigation";
+import { usePersonalization } from "@/hooks/use-personalization";
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { navigation } = usePersonalization();
+  const items = navigation?.mobile ?? mobileNav;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border)] bg-[var(--card)]/90 backdrop-blur-xl md:hidden">
       <div className="safe-bottom mx-auto flex max-w-lg items-stretch justify-between px-1 py-1.5">
-        {mobileNav.map(({ href, label, icon: LucideIcon, Icon: CustomIcon }) => {
+        {items.map(({ href, label, icon: LucideIcon, Icon: CustomIcon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PageTransition } from "@/components/ui/page-header";
 import { WelcomeHeader, WeatherWidget } from "@/components/dashboard/welcome-header";
 import { CompactAlertsPanel } from "@/components/dashboard/compact-alerts-panel";
@@ -25,12 +26,22 @@ import { mockDeals } from "@/lib/mock-data/deals";
 import { mockFamilyActivities } from "@/lib/mock-data/family";
 import { mockNewsArticles } from "@/lib/mock-data/news";
 import { mockActivityFeed, mockTrendingItems } from "@/lib/mock-data/discover";
+import { usePersonalization } from "@/hooks/use-personalization";
+import { rankDashboardSections, type DashboardSectionId } from "@/lib/personalization/dashboard-sections";
 import type { LifestyleRecommendation, TrendingItemDto } from "@/types/engagement";
+import type { ForYouRecommendation } from "@/types/radius";
 import { motion } from "framer-motion";
 
 export default function DashboardPage() {
+  const { profile, recommendations: forYou } = usePersonalization();
   const [recommendations, setRecommendations] = useState<LifestyleRecommendation[]>([]);
   const [trending, setTrending] = useState<TrendingItemDto[]>(mockTrendingItems);
+
+  const sectionOrder = useMemo(
+    () => rankDashboardSections(profile.interests),
+    [profile.interests]
+  );
+
   useEffect(() => {
     void Promise.all([
       apiFetch<{ items: LifestyleRecommendation[] }>("/api/recommendations/lifestyle").then(
@@ -42,46 +53,71 @@ export default function DashboardPage() {
     ]).catch(() => undefined);
   }, []);
 
-  return (
-    <PageTransition>
-      <WelcomeHeader />
-
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+  const sections: Record<DashboardSectionId, React.ReactNode> = {
+    welcome: <WelcomeHeader key="welcome" />,
+    checkin: (
+      <div key="checkin" className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <DailyCheckInButton streak={7} />
         <Link href="/rewards" className="text-sm text-[var(--accent)] hover:underline">
           View rewards →
         </Link>
       </div>
-
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
+    ),
+    alerts: (
+      <div key="alerts" className="mb-6 grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <WeatherWidget />
         </div>
         <CompactAlertsPanel />
       </div>
-
-      <MarketplaceHighlights />
-
-      <AiHomeSections />
-
-      <CommunityFeedSection />
-
-      <HorizontalScrollSection title="Today's Events" href="/events">
+    ),
+    marketplace: <MarketplaceHighlights key="marketplace" />,
+    forYou: (
+      <HorizontalScrollSection key="forYou" title="For You" href="/discover">
+        {(forYou.length > 0 ? forYou : []).map((rec: ForYouRecommendation) => (
+          <Link
+            key={rec.id}
+            href={rec.href ?? "/discover"}
+            className="min-w-[260px] shrink-0 snap-start rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden hover:border-[var(--accent)]/40 transition-colors"
+          >
+            {rec.imageUrl && (
+              <div className="relative h-32 w-full">
+                <Image src={rec.imageUrl} alt="" fill className="object-cover" sizes="260px" />
+              </div>
+            )}
+            <div className="p-3">
+              <p className="font-medium text-sm line-clamp-1">{rec.title}</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">{rec.reason}</p>
+            </div>
+          </Link>
+        ))}
+        {forYou.length === 0 && (
+          <p className="text-sm text-[var(--muted-foreground)] py-4">
+            Complete onboarding for personalized picks
+          </p>
+        )}
+      </HorizontalScrollSection>
+    ),
+    events: (
+      <HorizontalScrollSection key="events" title="Today's Events" href="/events">
         <EventsCarousel inline />
       </HorizontalScrollSection>
-
-      <HorizontalScrollSection title="Local Deals" href="/deals">
+    ),
+    deals: (
+      <HorizontalScrollSection key="deals" title="Local Deals" href="/deals">
         {mockDeals.slice(0, 5).map((deal) => (
           <DealCard key={deal.id} deal={deal} />
         ))}
       </HorizontalScrollSection>
-
-      <section className="mb-8">
+    ),
+    trending: (
+      <section key="trending" className="mb-8">
         <h2 className="mb-3 text-lg font-semibold">Trending in Your Community</h2>
         <TrendingStrip items={trending} />
       </section>
-
-      <HorizontalScrollSection title="What to Do Tonight" href="/discover">
+    ),
+    recommendations: (
+      <HorizontalScrollSection key="recommendations" title="What to Do Tonight" href="/discover">
         {(recommendations.length > 0
           ? recommendations
           : [
@@ -98,8 +134,9 @@ export default function DashboardPage() {
           <RecommendationCard key={rec.id} item={rec} />
         ))}
       </HorizontalScrollSection>
-
-      <section className="mb-8">
+    ),
+    activity: (
+      <section key="activity" className="mb-8">
         <h2 className="mb-3 text-lg font-semibold">Friends & Activity</h2>
         <div className="space-y-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
           {mockActivityFeed.slice(0, 4).map((item, i) => (
@@ -124,26 +161,36 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
-
-      <HorizontalScrollSection title="Local News" href="/news">
+    ),
+    news: (
+      <HorizontalScrollSection key="news" title="Local News" href="/news">
         {mockNewsArticles.slice(0, 4).map((article) => (
           <div key={article.id} className="min-w-[300px] shrink-0 snap-start">
             <NewsCard article={article} />
           </div>
         ))}
       </HorizontalScrollSection>
-
-      <HorizontalScrollSection title="Family Activities" href="/family">
+    ),
+    family: (
+      <HorizontalScrollSection key="family" title="Family Activities" href="/family">
         {mockFamilyActivities.slice(0, 5).map((a) => (
           <FamilyActivityCard key={a.id} activity={a} />
         ))}
       </HorizontalScrollSection>
-
-      <section className="mb-8">
+    ),
+    businesses: (
+      <section key="businesses" className="mb-8">
         <h2 className="mb-3 text-lg font-semibold">Nearby Businesses</h2>
         <NearbyServices />
       </section>
+    ),
+    ai: <AiHomeSections key="ai" />,
+    feed: <CommunityFeedSection key="feed" />,
+  };
 
+  return (
+    <PageTransition>
+      {sectionOrder.map((id) => sections[id])}
       <QuickActionFab />
     </PageTransition>
   );

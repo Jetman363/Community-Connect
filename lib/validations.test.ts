@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loginSchema, registerSchema } from "@/lib/validations";
+import { loginSchema, registerSchema, connectSocialLinkSchema } from "@/lib/validations";
 
 describe("loginSchema", () => {
   it("accepts valid credentials", () => {
@@ -27,5 +27,16 @@ describe("registerSchema", () => {
       displayName: "Test User",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("connectSocialLinkSchema", () => {
+  it("accepts valid platform and URL", () => {
+    const result = connectSocialLinkSchema.safeParse({
+      platform: "INSTAGRAM",
+      profileUrl: "https://instagram.com/user",
+      username: "user",
+    });
+    expect(result.success).toBe(true);
   });
 });

@@ -10,12 +10,13 @@ import { useFeed } from "@/hooks/use-feed";
 import { PageHeroBanner } from "@/components/ui/page-hero-banner";
 import { CommunityImage } from "@/components/ui/community-image";
 import { communityPhotos } from "@/lib/images/community-photos";
-import { postCategories, type MockPost } from "@/lib/mock-data/posts";
+import { postCategories } from "@/lib/mock-data/posts";
+import { FeedLoginPrompt } from "@/components/feed/feed-login-prompt";
 
 export default function FeedPage() {
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<"latest" | "trending">("latest");
-  const { posts, loading, loadingMore, hasMore, loadMore, addPost, updatePostLocal, source } =
+  const { posts, loading, loadingMore, hasMore, loadMore, addPost, source, unauthorized } =
     useFeed({ category, sort });
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -73,15 +74,15 @@ export default function FeedPage() {
       <div className="mx-auto max-w-2xl space-y-4">
         <PostComposer onPost={addPost} />
 
-        {loading ? (
+        {unauthorized ? (
+          <FeedLoginPrompt redirect="/feed" />
+        ) : loading ? (
           <div className="space-y-4">
             <Skeleton className="h-40 w-full" />
             <Skeleton className="h-40 w-full" />
           </div>
         ) : (
-          posts.map((post) => (
-            <FeedPostCard key={post.id} post={post as unknown as MockPost} />
-          ))
+          posts.map((post) => <FeedPostCard key={post.id} post={post} />)
         )}
 
         {loadingMore && (

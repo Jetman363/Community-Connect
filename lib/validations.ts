@@ -75,6 +75,34 @@ export const feedQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(50).default(20),
 });
 
+export const socialPlatformSchema = z.enum([
+  "FACEBOOK",
+  "INSTAGRAM",
+  "TIKTOK",
+  "TWITTER",
+  "LINKEDIN",
+  "YOUTUBE",
+]);
+
+export const connectSocialLinkSchema = z.object({
+  platform: socialPlatformSchema,
+  profileUrl: z.string().url().max(500),
+  username: z.string().min(1).max(64).optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export const patchSocialLinksSchema = z.object({
+  isPublic: z.boolean().optional(),
+  platforms: z
+    .array(
+      z.object({
+        platform: socialPlatformSchema,
+        isPublic: z.boolean(),
+      })
+    )
+    .optional(),
+});
+
 export const searchQuerySchema = z.object({
   q: z.string().min(1).max(200),
   limit: z.coerce.number().min(1).max(50).default(20),

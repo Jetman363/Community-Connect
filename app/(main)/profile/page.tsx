@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PageTransition } from "@/components/ui/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +15,18 @@ import { motion } from "framer-motion";
 import { CommunityImage } from "@/components/ui/community-image";
 import { communityPhotos } from "@/lib/images/community-photos";
 import { useRewardsSummary } from "@/hooks/use-personalization";
+import { PublicSocialLinks } from "@/components/social/public-social-links";
+import { apiFetch } from "@/lib/api/client";
 
 export default function ProfilePage() {
   const user = currentUser;
+  const [profileUserId, setProfileUserId] = useState(user.id);
+
+  useEffect(() => {
+    void apiFetch<{ id: string }>("/api/auth/me")
+      .then((me) => setProfileUserId(me.id))
+      .catch(() => undefined);
+  }, []);
   const points = useRewardsSummary();
   const feedPosts = getMockFeedPosts();
   const userPosts = feedPosts.filter((p) => p.authorId === user.id);
@@ -82,6 +92,7 @@ export default function ProfilePage() {
               </Badge>
             ))}
           </div>
+          <PublicSocialLinks userId={profileUserId} />
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
               href="/rewards"
@@ -110,7 +121,7 @@ export default function ProfilePage() {
         <TabsContent value="activity">
           <div className="space-y-4 max-w-2xl">
             {userPosts.length > 0 ? (
-              userPosts.map((post) => <FeedPostCard key={post.id} post={post as never} />)
+              userPosts.map((post) => <FeedPostCard key={post.id} post={post} />)
             ) : (
               <p className="py-8 text-center text-[var(--muted-foreground)]">No posts yet</p>
             )}
@@ -120,7 +131,7 @@ export default function ProfilePage() {
         <TabsContent value="saved">
           <div className="space-y-4 max-w-2xl">
             {savedPosts.map((post) => (
-              <FeedPostCard key={post.id} post={post as never} />
+              <FeedPostCard key={post.id} post={post} />
             ))}
           </div>
         </TabsContent>

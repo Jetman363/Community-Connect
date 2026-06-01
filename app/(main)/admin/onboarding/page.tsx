@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +79,7 @@ export default function OnboardingPage() {
 
       <p className="mt-6 text-xs text-[var(--muted-foreground)]">
         Visual workflow builder UI planned for V2.0 — configure automations at{" "}
-        <a href="/admin/agency" className="underline">Agency Config</a>.
+        <Link href="/admin/integrations" className="underline">Agency Config</Link>.
       </p>
     </PageTransition>
   );

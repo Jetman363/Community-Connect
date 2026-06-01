@@ -78,4 +78,79 @@ export async function markAllNotificationsRead(userId: string) {
   });
 }
 
+export async function notifyNearbyAlert(input: {
+  userId: string;
+  alertTitle: string;
+  alertId: string;
+  severity: string;
+}) {
+  return createNotification({
+    userId: input.userId,
+    type: "ALERT",
+    title: severityLabel(input.severity) + " alert nearby",
+    body: input.alertTitle,
+    link: `/alerts?id=${input.alertId}`,
+  });
+}
+
+export async function notifyGeofenceAlert(input: {
+  userId: string;
+  zoneName: string;
+  alertTitle: string;
+  alertId: string;
+}) {
+  return createNotification({
+    userId: input.userId,
+    type: "ALERT",
+    title: `Alert in ${input.zoneName}`,
+    body: input.alertTitle,
+    link: `/alerts?id=${input.alertId}`,
+  });
+}
+
+export async function notifyEmergencyAlert(input: {
+  userId: string;
+  alertTitle: string;
+  alertId: string;
+}) {
+  return createNotification({
+    userId: input.userId,
+    type: "ALERT",
+    title: "Emergency alert",
+    body: input.alertTitle,
+    link: `/alerts?id=${input.alertId}`,
+  });
+}
+
+export async function notifyReportStatus(input: {
+  userId: string;
+  reportId: string;
+  status: string;
+  title: string;
+}) {
+  return createNotification({
+    userId: input.userId,
+    type: "REPORT",
+    title: `Report ${statusLabel(input.status)}`,
+    body: input.title,
+    link: `/report?id=${input.reportId}`,
+  });
+}
+
+function severityLabel(s: string): string {
+  if (s === "CRITICAL" || s === "HIGH") return "Urgent";
+  if (s === "MODERATE") return "Safety";
+  return "Info";
+}
+
+function statusLabel(s: string): string {
+  const map: Record<string, string> = {
+    UNDER_REVIEW: "under review",
+    IN_PROGRESS: "in progress",
+    RESOLVED: "resolved",
+    CLOSED: "closed",
+  };
+  return map[s] ?? s.toLowerCase();
+}
+
 export { mapNotification };

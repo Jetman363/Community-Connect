@@ -7,13 +7,21 @@ import { cn } from "@/lib/utils";
 import { sidebarNav } from "@/config/navigation";
 import { currentUser } from "@/lib/mock-data";
 import { usePersonalization } from "@/hooks/use-personalization";
+import { canManageAdminSettings, hasMinRole } from "@/lib/permissions/rbac";
+import type { UserRole } from "@prisma/client";
+
+function canSeeNavItem(role: UserRole, item: (typeof sidebarNav)[number]) {
+  if (item.platformAdminOnly) return canManageAdminSettings(role);
+  if (item.adminOnly) return hasMinRole(role, "MODERATOR");
+  return true;
+}
 
 export function Sidebar() {
   const pathname = usePathname();
-  const isAdmin = currentUser.role === "ADMIN" || currentUser.role === "MODERATOR";
+  const role = currentUser.role as UserRole;
   const { navigation } = usePersonalization();
   const ranked = navigation?.sidebar ?? sidebarNav;
-  const items = ranked.filter((item) => !item.adminOnly || isAdmin);
+  const items = ranked.filter((item) => canSeeNavItem(role, item));
 
   return (
     <aside className="hidden w-60 shrink-0 lg:block">

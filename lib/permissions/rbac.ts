@@ -57,3 +57,8 @@ export function canManageBusiness(role: UserRole): boolean {
 export function canEnterpriseAdmin(role: UserRole): boolean {
   return canAdmin(role) || role === "ENTERPRISE_CLIENT" || isSuperAdmin(role);
 }
+
+/** Platform admin settings: privileges, monitoring, system config. */
+export function canManageAdminSettings(role: UserRole): boolean {
+  return hasMinRole(role, "ADMIN") || isSuperAdmin(role);
+}

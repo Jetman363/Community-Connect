@@ -3,8 +3,13 @@ import type { NextRequest } from "next/server";
 import { AUTH_COOKIE } from "@/lib/auth";
 import { verifyTokenEdge } from "@/lib/auth/jwt-edge";
 import { ONBOARDING_COOKIE } from "@/lib/auth/onboarding";
-import { adminRoutes, protectedRoutes } from "@/config/routes";
-import { hasMinRole } from "@/lib/permissions/rbac";
+import {
+  adminOpsRoutes,
+  adminRoutes,
+  adminSettingsRoutes,
+  protectedRoutes,
+} from "@/config/routes";
+import { canManageAdminSettings, hasMinRole } from "@/lib/permissions/rbac";
 import { buildSecurityHeaders } from "@/lib/security/headers";
 
 function withSecurityHeaders(response: NextResponse): NextResponse {
@@ -21,6 +26,13 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
     return withSecurityHeaders(NextResponse.next());
+  }
+
+  if (pathname === "/admin/login") {
+    const login = new URL("/login", request.url);
+    login.searchParams.set("redirect", request.nextUrl.searchParams.get("redirect") ?? "/admin");
+    login.searchParams.set("admin", "1");
+    return withSecurityHeaders(NextResponse.redirect(login));
   }
 
   const isProtected = protectedRoutes.some(
@@ -47,11 +59,20 @@ export async function middleware(request: NextRequest) {
     return withSecurityHeaders(NextResponse.redirect(onboarding));
   }
 
+  const isAdminSettingsRoute = adminSettingsRoutes.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+  if (isAdminSettingsRoute && !canManageAdminSettings(payload.role)) {
+    return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
+  }
+
   const isAdminRoute = adminRoutes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
   if (isAdminRoute) {
-    const opsOnly = pathname.startsWith("/admin/ops");
+    const opsOnly = adminOpsRoutes.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`)
+    );
     const allowed = opsOnly
       ? hasMinRole(payload.role, "PUBLIC_SAFETY")
       : hasMinRole(payload.role, "MODERATOR");

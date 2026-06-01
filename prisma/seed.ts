@@ -18,7 +18,7 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: "demo@communityconnect.app" },
-    update: {},
+    update: { role: "ADMIN", verified: true },
     create: {
       email: "demo@communityconnect.app",
       passwordHash,
@@ -27,6 +27,15 @@ async function main() {
       profile: { create: { displayName: "Demo Admin", badges: ["verified", "admin"] } },
     },
   });
+
+  const existingAdminAssignment = await prisma.userRoleAssignment.findFirst({
+    where: { userId: admin.id, role: "ADMIN", communityId: null, organizationId: null },
+  });
+  if (!existingAdminAssignment) {
+    await prisma.userRoleAssignment.create({
+      data: { userId: admin.id, role: "ADMIN", grantedById: admin.id },
+    });
+  }
 
   const resident = await prisma.user.upsert({
     where: { email: "resident@communityconnect.app" },

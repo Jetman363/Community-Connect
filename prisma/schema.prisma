@@ -552,6 +552,7 @@ model CommunityMember {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
+  username     String?  @unique
   passwordHash String?
   role         UserRole @default(RESIDENT)
   verified     Boolean  @default(false)
@@ -562,6 +563,11 @@ model User {
   updatedAt    DateTime @updatedAt
 
   profile              Profile?
+  preferences          UserPreferences?
+  location             UserLocation?
+  savedLocations       SavedLocation[]
+  behaviors            UserBehavior[]
+  recommendations      UserRecommendation[]
   sessions             UserSession[]
   roleAssignments      UserRoleAssignment[]
   temporaryPermissions TemporaryPermission[]
@@ -632,6 +638,8 @@ model Profile {
   userId       String   @unique
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   displayName  String
+  firstName    String?
+  lastName     String?
   avatarUrl    String?
   bio          String?
   neighborhood String?
@@ -2109,12 +2117,96 @@ model TrendingItem {
 }
 
 model PersonalizationProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  interests   Json     @default("[]")
-  preferences Json     @default("{}")
-  updatedAt   DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interests             Json      @default("[]")
+  preferences           Json      @default("{}")
+  onboardingCompletedAt DateTime?
+  aiProfileSummary      String?
+  updatedAt             DateTime  @updatedAt
+}
+
+model UserPreferences {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationsEnabled Boolean  @default(true)
+  emailDigest          Boolean  @default(true)
+  pushAlerts           Boolean  @default(true)
+  emergencyAlerts      Boolean  @default(true)
+  profileVisibility    String   @default("community")
+  searchVisibility     String   @default("community")
+  activityVisibility   String   @default("community")
+  communityVisibility  String   @default("community")
+  radiusMiles          Float    @default(10)
+  menuLocked           Boolean  @default(false)
+  navOrder             Json?
+  privacy              Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model UserLocation {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lat            Float?
+  lng            Float?
+  city           String?
+  state          String?
+  zip            String?
+  country        String?        @default("US")
+  precise        Boolean        @default(false)
+  sharingEnabled Boolean        @default(true)
+  source         LocationSource @default(MANUAL)
+  updatedAt      DateTime       @updatedAt
+}
+
+model SavedLocation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  lat       Float
+  lng       Float
+  city      String?
+  state     String?
+  zip       String?
+  country   String?  @default("US")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model UserBehavior {
+  id         String            @id @default(cuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType  BehaviorEventType
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, eventType])
+  @@index([entityType, entityId])
+}
+
+model UserRecommendation {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entityType String
+  entityId   String
+  score      Float
+  reason     String?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, entityType, entityId])
+  @@index([userId, score(sort: Desc)])
 }
 
 enum SocialPlatform {
@@ -2124,6 +2216,20 @@ enum SocialPlatform {
   TWITTER
   LINKEDIN
   YOUTUBE
+}
+
+enum LocationSource {
+  GPS
+  MANUAL
+}
+
+enum BehaviorEventType {
+  VIEW
+  CLICK
+  SEARCH
+  SAVE
+  SHARE
+  NAVIGATE
 }
 
 model UserSocialLink {

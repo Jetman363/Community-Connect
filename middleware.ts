@@ -46,6 +46,7 @@ export const config = {
     "/hoa",
     "/services",
     "/messages",
+    "/settings",
     "/dashboard/:path*",
     "/feed/:path*",
     "/alerts/:path*",
@@ -59,5 +60,7 @@ export const config = {
     "/hoa/:path*",
     "/services/:path*",
     "/messages/:path*",
+    "/settings",
+    "/settings/:path*",
   ],
 };

@@ -13,6 +13,7 @@ export const protectedRoutes = [
   "/hoa",
   "/services",
   "/messages",
+  "/settings",
 ] as const;
 
 /** Routes restricted to admin/moderator roles. */

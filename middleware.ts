@@ -60,7 +60,6 @@ export const config = {
     "/hoa/:path*",
     "/services/:path*",
     "/messages/:path*",
-    "/settings",
     "/settings/:path*",
   ],
 };

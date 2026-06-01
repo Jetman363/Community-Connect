@@ -15,6 +15,7 @@ import {
   Compass,
   Users,
   Tag,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 import { SidebarIcon, MobileNavIcon } from "@/components/icons/marketplace-icon";
@@ -27,7 +28,10 @@ export interface NavItem {
   label: string;
   icon?: LucideIcon;
   Icon?: NavIconComponent;
+  /** Visible to MODERATOR+ when true */
   adminOnly?: boolean;
+  /** Visible to ADMIN / SUPER_ADMIN only (privileges, monitoring, admin settings) */
+  platformAdminOnly?: boolean;
 }
 
 /** Apply server-provided href order to local nav config (icons are not JSON-serializable). */
@@ -70,6 +74,8 @@ export const sidebarNav: NavItem[] = [
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/assistant", label: "AI Assistant", icon: Bot },
   { href: "/admin", label: "Admin", icon: Shield, adminOnly: true },
+  { href: "/admin/settings", label: "Admin Settings", icon: Settings, platformAdminOnly: true },
+  { href: "/admin/monitoring", label: "Monitoring", icon: Activity, platformAdminOnly: true },
   { href: "/admin/launch", label: "Launch", icon: LayoutDashboard, adminOnly: true },
   { href: "/admin/ops", label: "Ops", icon: Map, adminOnly: true },
 ];

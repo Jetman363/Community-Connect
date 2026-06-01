@@ -11,6 +11,7 @@ import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
+  const isAdminLogin = searchParams.get("admin") === "1";
   const [email, setEmail] = useState("demo@communityconnect.app");
   const [password, setPassword] = useState("Demo1234!");
   const [error, setError] = useState("");
@@ -53,8 +54,12 @@ function LoginForm() {
     <AuthSplitLayout>
       <Card className="w-full max-w-md border-[var(--border)] shadow-lg">
         <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Sign in to Community Connect</CardDescription>
+          <CardTitle>{isAdminLogin ? "Administrator sign in" : "Welcome back"}</CardTitle>
+          <CardDescription>
+            {isAdminLogin
+              ? "Sign in with an ADMIN or SUPER_ADMIN account to access /admin"
+              : "Sign in to Community Connect"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,6 +85,14 @@ function LoginForm() {
           </div>
           <p className="mt-4 text-center text-sm text-[var(--muted-foreground)]">
             No account? <Link href="/register" className="text-[var(--accent)]">Register</Link>
+            {isAdminLogin ? (
+              <>
+                {" · "}
+                <Link href="/login" className="text-[var(--accent)]">
+                  Resident login
+                </Link>
+              </>
+            ) : null}
           </p>
         </CardContent>
       </Card>

@@ -7,9 +7,17 @@ import { writeAuditLog } from "@/lib/api/services/audit";
 import { PERMISSIONS, ROLE_PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await enterpriseAuth(req, {
+    minRole: "ADMIN",
+    permission: PERMISSIONS.USERS_MANAGE_ROLES,
+  });
+  if (!("payload" in auth)) return auth;
+
   return jsonOk({
     roles: Object.keys(ROLE_PERMISSIONS),
+    permissions: Object.values(PERMISSIONS),
+    matrix: ROLE_PERMISSIONS,
     note: "SUPER_ADMIN bypasses all permission checks globally",
   });
 }

@@ -111,11 +111,18 @@ export function AppHeader() {
         <DropdownItem href="/settings" icon={Settings}>
           Settings
         </DropdownItem>
-        {currentUser.role === "ADMIN" && (
+        {currentUser.role === "ADMIN" ||
+        currentUser.role === "SUPER_ADMIN" ||
+        currentUser.role === "MODERATOR" ? (
           <DropdownItem href="/admin" icon={Shield}>
             Admin Console
           </DropdownItem>
-        )}
+        ) : null}
+        {currentUser.role === "ADMIN" || currentUser.role === "SUPER_ADMIN" ? (
+          <DropdownItem href="/admin/settings" icon={Settings}>
+            Admin Settings
+          </DropdownItem>
+        ) : null}
         <DropdownSeparator />
         <DropdownItem href="/api/auth/logout" icon={LogOut} destructive>
           Sign out

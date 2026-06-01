@@ -82,6 +82,47 @@ enum NotificationType {
   MESSAGE
   REPORT
   SYSTEM
+  LIKE
+  COMMENT
+  REPLY
+  MENTION
+  FOLLOW
+  MARKETPLACE
+}
+
+enum PostType {
+  TEXT
+  IMAGE
+  VIDEO
+  POLL
+}
+
+enum ReactionType {
+  LIKE
+  HELPFUL
+  SUPPORT
+  ALERT_ACK
+}
+
+enum FollowTargetType {
+  USER
+  BUSINESS
+  COMMUNITY
+  TOPIC
+}
+
+enum ContentReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum ContentEntityType {
+  POST
+  COMMENT
+  USER
+  LISTING
 }
 
 enum MediaUploadStatus {
@@ -165,9 +206,16 @@ model User {
   communityMemberships CommunityMember[]
   posts                Post[]
   comments             Comment[]
-  likes                Like[]
+  reactions            Reaction[]
   reports              Report[]
+  contentReports       ContentReport[]      @relation("ContentReporter")
   notifications        Notification[]
+  savedPosts           SavedPost[]
+  following            Follow[]             @relation("Follower")
+  blockedUsers         UserBlock[]          @relation("Blocker")
+  blockedBy            UserBlock[]          @relation("Blocked")
+  mutedUsers           UserMute[]           @relation("Muter")
+  mutedBy              UserMute[]           @relation("Muted")
   auditLogs            AuditLog[]           @relation("AuditActor")
   rsvps                RSVP[]
   marketplace          MarketplaceListing[]
@@ -206,42 +254,136 @@ model Post {
   author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   title       String?
   content     String
+  type        PostType     @default(TEXT)
   category    PostCategory @default(GENERAL)
   mediaUrls   String[]     @default([])
   videoUrl    String?
+  hashtags    String[]     @default([])
+  mentions    String[]     @default([])
+  lat         Float?
+  lng         Float?
+  locationLabel String?
+  pollData    Json?
+  repostOfId  String?
+  repostOf    Post?        @relation("Reposts", fields: [repostOfId], references: [id], onDelete: SetNull)
+  reposts     Post[]       @relation("Reposts")
   shareCount  Int          @default(0)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  comments Comment[]
-  likes    Like[]
+  comments    Comment[]
+  reactions   Reaction[]
+  savedBy     SavedPost[]
+  mediaUploads MediaUpload[]
 
   @@index([communityId, createdAt(sort: Desc)])
+  @@index([communityId, category, createdAt(sort: Desc)])
   @@index([authorId])
   @@index([category])
+  @@index([repostOfId])
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  reactions Reaction[]
 
   @@index([postId, createdAt])
+  @@index([parentId])
 }
 
-model Like {
+model Reaction {
+  id        String       @id @default(cuid())
+  postId    String?
+  post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+
+  @@unique([postId, userId, type])
+  @@unique([commentId, userId, type])
+  @@index([postId, type])
+  @@index([commentId, type])
+  @@index([userId])
+}
+
+model Follow {
+  id          String           @id @default(cuid())
+  followerId  String
+  follower    User             @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  targetType  FollowTargetType
+  targetId    String
+  createdAt   DateTime         @default(now())
+
+  @@unique([followerId, targetType, targetId])
+  @@index([followerId])
+  @@index([targetType, targetId])
+}
+
+model SavedPost {
   id        String   @id @default(cuid())
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  @@unique([postId, userId])
+  @@unique([userId, postId])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model ContentReport {
+  id          String              @id @default(cuid())
+  reporterId  String
+  reporter    User                @relation("ContentReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  entityType  ContentEntityType
+  entityId    String
+  reason      String
+  details     String?
+  status      ContentReportStatus @default(PENDING)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@index([reporterId])
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}
+
+model UserMute {
+  id        String   @id @default(cuid())
+  muterId   String
+  muter     User     @relation("Muter", fields: [muterId], references: [id], onDelete: Cascade)
+  mutedId   String
+  muted     User     @relation("Muted", fields: [mutedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([muterId, mutedId])
+  @@index([muterId])
 }
 
 // ─── Safety & Reports ────────────────────────────────────────────────────────
@@ -468,6 +610,8 @@ model MediaUpload {
   community   Community?        @relation(fields: [communityId], references: [id], onDelete: SetNull)
   messageId   String?
   message     Message?          @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  postId      String?
+  post        Post?             @relation(fields: [postId], references: [id], onDelete: SetNull)
   url         String
   mimeType    String
   sizeBytes   Int
@@ -478,6 +622,7 @@ model MediaUpload {
 
   @@index([uploaderId])
   @@index([communityId])
+  @@index([postId])
   @@index([entityType, entityId])
 }
 

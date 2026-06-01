@@ -30,6 +30,24 @@ export interface NavItem {
   adminOnly?: boolean;
 }
 
+/** Apply server-provided href order to local nav config (icons are not JSON-serializable). */
+export function orderNavByHref(catalog: NavItem[], orderedHrefs: string[]): NavItem[] {
+  const byHref = new globalThis.Map(catalog.map((item) => [item.href, item]));
+  const seen = new globalThis.Set<string>();
+  const ordered: NavItem[] = [];
+  for (const href of orderedHrefs) {
+    const item = byHref.get(href);
+    if (item) {
+      ordered.push(item);
+      seen.add(href);
+    }
+  }
+  for (const item of catalog) {
+    if (!seen.has(item.href)) ordered.push(item);
+  }
+  return ordered;
+}
+
 /** Primary sidebar navigation — Marketplace is top-level, equal weight */
 export const sidebarNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },

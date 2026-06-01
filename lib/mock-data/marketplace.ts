@@ -1,3 +1,5 @@
+import { communityPhotos } from "@/lib/images/community-photos";
+
 export type ListingType = "sell" | "buy" | "trade" | "job" | "free";
 
 export interface MockListing {
@@ -27,7 +29,7 @@ export const mockListings: MockListing[] = [
     condition: "Like New",
     sellerId: "demo-resident",
     location: "Oak Hills",
-    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80",
+    imageUrl: communityPhotos.marketplace.patio,
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     views: 42,
     saved: false,
@@ -41,6 +43,7 @@ export const mockListings: MockListing[] = [
     category: "Sports",
     sellerId: "u2",
     location: "Cedar Park",
+    imageUrl: communityPhotos.marketplace.bike,
     createdAt: new Date(Date.now() - 172800000).toISOString(),
     views: 18,
     saved: true,
@@ -55,7 +58,7 @@ export const mockListings: MockListing[] = [
     condition: "Good",
     sellerId: "u3",
     location: "Oak Hills",
-    imageUrl: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&q=80",
+    imageUrl: communityPhotos.marketplace.guitar,
     createdAt: new Date(Date.now() - 259200000).toISOString(),
     views: 31,
     saved: false,

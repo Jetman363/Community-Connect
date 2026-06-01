@@ -16,8 +16,10 @@ import { useMarketplace, marketplaceCategories } from "@/hooks/use-marketplace";
 import { useJobs, jobTypes } from "@/hooks/use-jobs";
 import type { MarketplaceListingDto, JobListingDto } from "@/types/marketplace";
 import { createListing } from "@/lib/api/client";
+import { PageHeroBanner } from "@/components/ui/page-hero-banner";
+import { communityPhotos } from "@/lib/images/community-photos";
 import { Search, MapPin, Plus, Briefcase } from "lucide-react";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 
 function CreateListingModal({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -150,6 +152,13 @@ export default function MarketplacePage() {
         action={<CreateListingModal onCreated={refresh} />}
       />
 
+      <PageHeroBanner
+        src={communityPhotos.hero.marketplace}
+        alt="Patio furniture for sale in the neighborhood marketplace"
+        title="Neighborhood marketplace"
+        description="Buy, sell, trade, and find local gigs"
+      />
+
       {(source === "mock" || jobsSource === "mock") && (
         <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
           Demo data — database offline. Run migrations and seed for live data.
@@ -277,7 +286,7 @@ export default function MarketplacePage() {
             </div>
             <p className="text-sm">
               Listed by <strong>{selected.seller.displayName}</strong> ·{" "}
-              {formatRelative(selected.createdAt)}
+              <RelativeTime date={selected.createdAt} />
             </p>
             <InquiryForm listingId={selected.id} />
             <Link href="/map" className="text-sm text-[var(--accent)] hover:underline">

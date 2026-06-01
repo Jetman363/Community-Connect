@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -40,7 +41,6 @@ function LoginForm() {
         return;
       }
 
-      // Full navigation ensures middleware sees the new httpOnly cookie immediately.
       window.location.assign(redirect);
     } catch {
       setError("Network error. Please try again.");
@@ -50,8 +50,8 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
-      <Card className="w-full max-w-md">
+    <AuthSplitLayout>
+      <Card className="w-full max-w-md border-[var(--border)] shadow-lg">
         <CardHeader>
           <CardTitle>Welcome back</CardTitle>
           <CardDescription>Sign in to Community Connect</CardDescription>
@@ -83,7 +83,7 @@ function LoginForm() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AuthSplitLayout>
   );
 }
 

@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { mockConversations, getUserById } from "@/lib/mock-data";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { cn } from "@/lib/utils";
 import { Search, Send } from "lucide-react";
 import { motion } from "framer-motion";
@@ -72,7 +72,7 @@ export default function MessagesPage() {
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm">{user?.displayName}</span>
                       <span className="text-[10px] text-[var(--muted-foreground)]">
-                        {formatRelative(conv.lastMessageAt)}
+                        <RelativeTime date={conv.lastMessageAt} />
                       </span>
                     </div>
                     <p className="truncate text-xs text-[var(--muted-foreground)]">

@@ -1,3 +1,5 @@
+import { communityPhotos } from "@/lib/images/community-photos";
+
 export type PostCategory =
   | "general"
   | "neighborhood"
@@ -36,7 +38,7 @@ export const mockPosts: MockPost[] = [
     content:
       "Neighborhood cleanup this Saturday at 9 AM! We'll meet at Cedar Park entrance. Gloves and bags provided. Bring the whole family — coffee and donuts after. 🌿",
     category: "neighborhood",
-    imageUrl: "https://images.unsplash.com/photo-1532996122724-e3c354a0b782?w=800&q=80",
+    imageUrl: communityPhotos.feed.cleanup,
     likes: 47,
     comments: 12,
     shares: 8,
@@ -51,7 +53,7 @@ export const mockPosts: MockPost[] = [
     content:
       "Has anyone seen a golden retriever near Cedar Park? Answers to 'Buddy', wearing a blue collar. Last seen 2 hours ago near the playground.",
     category: "lost-found",
-    imageUrl: "https://images.unsplash.com/photo-1558787533-047468462f99?w=800&q=80",
+    imageUrl: communityPhotos.feed.lostPet,
     likes: 89,
     comments: 34,
     shares: 56,
@@ -115,7 +117,7 @@ export const mockPosts: MockPost[] = [
     authorId: "demo-resident",
     content: "Selling a barely-used patio set — $200 OBO. DM if interested!",
     category: "marketplace",
-    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
+    imageUrl: communityPhotos.feed.marketplace,
     likes: 8,
     comments: 6,
     shares: 1,

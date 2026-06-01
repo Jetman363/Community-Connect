@@ -1097,12 +1097,87 @@ async function main() {
 
   await prisma.personalizationProfile.upsert({
     where: { userId: resident.id },
-    update: { interests: ["events", "deals", "family"], preferences: { feedDensity: "normal" } },
+    update: {
+      interests: ["events", "deals", "family", "marketplace"],
+      preferences: { feedDensity: "normal" },
+      onboardingCompletedAt: new Date(),
+      aiProfileSummary: "Active neighbor in Austin interested in events, deals, and family activities.",
+    },
     create: {
       userId: resident.id,
-      interests: ["events", "deals", "family"],
+      interests: ["events", "deals", "family", "marketplace"],
       preferences: { feedDensity: "normal" },
+      onboardingCompletedAt: new Date(),
+      aiProfileSummary: "Active neighbor in Austin interested in events, deals, and family activities.",
     },
+  });
+
+  await prisma.userPreferences.upsert({
+    where: { userId: resident.id },
+    update: { radiusMiles: 10, menuLocked: false },
+    create: { userId: resident.id, radiusMiles: 10 },
+  });
+
+  await prisma.userLocation.upsert({
+    where: { userId: resident.id },
+    update: {
+      lat: 30.2672,
+      lng: -97.7431,
+      city: "Austin",
+      state: "TX",
+      zip: "78701",
+      country: "US",
+      precise: false,
+      sharingEnabled: true,
+      source: "MANUAL",
+    },
+    create: {
+      userId: resident.id,
+      lat: 30.2672,
+      lng: -97.7431,
+      city: "Austin",
+      state: "TX",
+      zip: "78701",
+      country: "US",
+      precise: false,
+      sharingEnabled: true,
+      source: "MANUAL",
+    },
+  });
+
+  await prisma.user.update({
+    where: { id: resident.id },
+    data: { username: "alex_resident" },
+  });
+
+  await prisma.profile.update({
+    where: { userId: resident.id },
+    data: {
+      firstName: "Alex",
+      lastName: "Resident",
+      bio: "Oak Hills neighbor · Radius early adopter",
+      lat: 30.2672,
+      lng: -97.7431,
+      neighborhood: "Austin, TX",
+    },
+  });
+
+  await prisma.userInterest.createMany({
+    data: [
+      { userId: resident.id, topic: "marketplace" },
+      { userId: resident.id, topic: "restaurants" },
+      { userId: resident.id, topic: "sports" },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.userBehavior.createMany({
+    data: [
+      { userId: resident.id, eventType: "VIEW", entityType: "deal", entityId: deal1.id },
+      { userId: resident.id, eventType: "CLICK", entityType: "event", entityId: "evt1" },
+      { userId: resident.id, eventType: "SEARCH", entityType: "search", metadata: { query: "farmers market" } },
+    ],
+    skipDuplicates: true,
   });
 
   await prisma.trendingItem.createMany({

@@ -12,6 +12,8 @@ import {
   DropdownChevron,
 } from "@/components/ui/dropdown";
 import { mockNotifications, currentUser } from "@/lib/mock-data";
+import { hasMinRole } from "@/lib/permissions/rbac";
+import type { UserRole } from "@prisma/client";
 import { RelativeTime } from "@/components/ui/relative-time";
 import { Badge } from "@/components/ui/badge";
 import { CommunitySwitcher } from "@/components/layout/community-switcher";
@@ -111,14 +113,12 @@ export function AppHeader() {
         <DropdownItem href="/settings" icon={Settings}>
           Settings
         </DropdownItem>
-        {currentUser.role === "ADMIN" ||
-        currentUser.role === "SUPER_ADMIN" ||
-        currentUser.role === "MODERATOR" ? (
+        {hasMinRole(currentUser.role as UserRole, "MODERATOR") ? (
           <DropdownItem href="/admin" icon={Shield}>
             Admin Console
           </DropdownItem>
         ) : null}
-        {currentUser.role === "ADMIN" || currentUser.role === "SUPER_ADMIN" ? (
+        {hasMinRole(currentUser.role as UserRole, "ADMIN") ? (
           <DropdownItem href="/admin/settings" icon={Settings}>
             Admin Settings
           </DropdownItem>

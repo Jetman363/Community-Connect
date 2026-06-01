@@ -25,7 +25,7 @@ export function CommunitySwitcher() {
       try {
         const res = await apiFetch<{ items: CommunityOption[] }>("/api/communities");
         setCommunities(res.items);
-        if (res.items[0] && !activeId) setActiveId(res.items[0].id);
+        if (res.items[0]) setActiveId(res.items[0].id);
       } catch {
         setCommunities([
           { id: "demo-community", name: "Oak Hills Community", slug: "demo-community" },
@@ -33,7 +33,7 @@ export function CommunitySwitcher() {
         setActiveId("demo-community");
       }
     })();
-  }, [activeId]);
+  }, []);
 
   const active = communities.find((c) => c.id === activeId) ?? communities[0];
 

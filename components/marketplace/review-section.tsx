@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ReviewDto } from "@/types/marketplace";
 import { createReview } from "@/lib/api/client";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { cn } from "@/lib/utils";
 
 function StarInput({
@@ -109,7 +109,7 @@ export function ReviewSection({
               </div>
             )}
             <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-              {formatRelative(r.createdAt)}
+              <RelativeTime date={r.createdAt} />
               {r.helpfulCount > 0 && ` · ${r.helpfulCount} found helpful`}
             </p>
           </article>

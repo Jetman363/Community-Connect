@@ -5,6 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** For UI labels use `<RelativeTime />`; this uses Date.now() and mismatches SSR. */
 export function formatRelative(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const diff = Date.now() - d.getTime();

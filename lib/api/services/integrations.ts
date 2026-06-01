@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { asInputJson } from "@/lib/prisma-json";
 import type { SyncDirection, SyncStatus } from "@prisma/client";
 import { logAudit } from "@/lib/audit";
 import type { TenantScope } from "@/lib/integrations/types";
@@ -28,7 +29,7 @@ export async function recordHealthCheck(
   metrics?: Record<string, unknown>
 ) {
   return prisma.connectorHealthCheck.create({
-    data: { connectorId, status, message, metrics: metrics ?? undefined },
+    data: { connectorId, status, message, metrics: metrics ? asInputJson(metrics) : undefined },
   });
 }
 
@@ -95,7 +96,7 @@ export async function patchConnectorConfig(
 
   const updated = await prisma.integrationConnector.update({
     where: { id: connectorId },
-    data: { config },
+    data: { config: asInputJson(config) },
   });
 
   logAudit({

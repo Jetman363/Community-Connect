@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { SafetyAlertDto } from "@/types/safety";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Bookmark, CheckCircle2, Share2 } from "lucide-react";
-import { formatRelative } from "@/lib/utils";
+import { RelativeTime } from "@/components/ui/relative-time";
 import { markerColorForSeverity } from "@/lib/maps/markers";
 
 const severityStyles: Record<
@@ -114,7 +114,7 @@ export function AlertCard({
         </span>
         <span className="flex items-center gap-1">
           <Clock className="h-3 w-3" />
-          {formatRelative(alert.createdAt)}
+          <RelativeTime date={alert.createdAt} />
         </span>
         {alert.source && <span>{alert.source}</span>}
       </div>

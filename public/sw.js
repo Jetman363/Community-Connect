@@ -1,5 +1,5 @@
-const CACHE = "cc-shell-v1";
-const SHELL = ["/", "/dashboard", "/offline"];
+const CACHE = "cc-shell-v2";
+const SHELL = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -9,29 +9,33 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
+
+function isDocumentRequest(request) {
+  if (request.mode === "navigate") return true;
+  const accept = request.headers.get("accept") || "";
+  return accept.includes("text/html");
+}
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api")) return;
+  if (url.pathname.startsWith("/api") || url.pathname.startsWith("/_next")) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request)
-          .then((res) => {
-            if (res.ok && url.pathname.match(/^\/(dashboard|discover|marketplace)/)) {
-              const clone = res.clone();
-              caches.open(CACHE).then((c) => c.put(event.request, clone));
-            }
-            return res;
-          })
-          .catch(() => caches.match("/dashboard") || caches.match("/"))
-      );
-    })
-  );
+  // Auth-sensitive pages must always hit the network so middleware sees cookies.
+  if (isDocumentRequest(event.request)) {
+    event.respondWith(
+      fetch(event.request).catch(
+        () => caches.match("/offline") || caches.match("/") || Response.error()
+      )
+    );
+    return;
+  }
 });

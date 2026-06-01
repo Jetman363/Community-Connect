@@ -8,6 +8,14 @@ export function PwaRegister() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      if ("serviceWorker" in navigator) {
+        void navigator.serviceWorker.getRegistrations().then((regs) => {
+          for (const reg of regs) void reg.unregister();
+        });
+      }
+      return;
+    }
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }

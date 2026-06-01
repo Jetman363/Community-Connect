@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,12 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (searchParams.get("auth") === "failed") {
+      setError("Sign-in succeeded but the session was not accepted. Please try again.");
+    }
+  }, [searchParams]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -23,14 +29,14 @@ function LoginForm() {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
 
       if (!res.ok) {
         setError(data.error || "Login failed");
-        setLoading(false);
         return;
       }
 
@@ -38,6 +44,7 @@ function LoginForm() {
       window.location.assign(redirect);
     } catch {
       setError("Network error. Please try again.");
+    } finally {
       setLoading(false);
     }
   }

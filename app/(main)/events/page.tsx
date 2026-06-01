@@ -20,20 +20,20 @@ export default function EventsPage() {
 
   const handleRsvp = (id: string) => {
     setEvents((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? {
-              ...e,
-              rsvped: !e.rsvped,
-              rsvpCount: e.rsvped ? e.rsvpCount - 1 : e.rsvpCount + 1,
-            }
-          : e
-      )
+      prev.map((e) => {
+        if (e.id !== id) return e;
+        const going = e.rsvpStatus !== "going";
+        return {
+          ...e,
+          rsvpStatus: going ? "going" : "none",
+          rsvpCount: going ? e.rsvpCount + 1 : Math.max(0, e.rsvpCount - 1),
+        };
+      })
     );
   };
 
   const groupedByDate = filtered.reduce<Record<string, MockEvent[]>>((acc, event) => {
-    const date = new Date(event.startAt).toLocaleDateString("en-US", {
+    const date = new Date(event.startsAt).toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",

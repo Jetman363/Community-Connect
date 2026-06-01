@@ -9,6 +9,8 @@ const LAYERS = [
   { id: "reports", label: "Reports" },
   { id: "events", label: "Events" },
   { id: "businesses", label: "Businesses" },
+  { id: "listings", label: "Listings" },
+  { id: "jobs", label: "Jobs" },
 ] as const;
 
 export function LayerControls({

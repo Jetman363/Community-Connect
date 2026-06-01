@@ -1,25 +1,45 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
-import { FilterChips } from "@/components/ui/filter-chips";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MarketplaceListingCard } from "@/components/cards/marketplace-listing";
 import { InquiryForm } from "@/components/marketplace/inquiry-form";
-import { useMarketplace, marketplaceCategories } from "@/hooks/use-marketplace";
-import { useJobs, jobTypes } from "@/hooks/use-jobs";
-import type { MarketplaceListingDto, JobListingDto } from "@/types/marketplace";
-import { createListing } from "@/lib/api/client";
-import { PageHeroBanner } from "@/components/ui/page-hero-banner";
-import { communityPhotos } from "@/lib/images/community-photos";
-import { Search, MapPin, Plus, Briefcase } from "lucide-react";
-import { RelativeTime } from "@/components/ui/relative-time";
+import { MarketplaceSearchHero } from "@/components/marketplace/marketplace-search-hero";
+import { CategoryChips } from "@/components/marketplace/category-chips";
+import { FeaturedRow } from "@/components/marketplace/featured-row";
+import { ListingGrid } from "@/components/marketplace/listing-grid";
+import { ListingList } from "@/components/marketplace/listing-list";
+import { ClassifiedsSection } from "@/components/marketplace/classifieds-section";
+import { JobsSection } from "@/components/marketplace/jobs-section";
+import { DealsSection } from "@/components/marketplace/deals-section";
+import { BusinessesRow } from "@/components/marketplace/businesses-row";
+import { ServicesRow } from "@/components/marketplace/services-row";
+import { ListingDetailModal } from "@/components/marketplace/listing-detail-modal";
+import { BusinessCard } from "@/components/cards/business-card";
+import { ReviewSection } from "@/components/marketplace/review-section";
+import { useMarketplace } from "@/hooks/use-marketplace";
+import { useJobs } from "@/hooks/use-jobs";
+import { useBusinesses } from "@/hooks/use-businesses";
+import type { MarketplaceListingDto, JobListingDto, BusinessDto, ReviewDto } from "@/types/marketplace";
+import { createListing, fetchBusinessReviews } from "@/lib/api/client";
+import { mockDeals } from "@/lib/mock-data/deals";
+import {
+  getMockRecentListings,
+  getMockNearbyListings,
+  getMockTrendingListings,
+  getMockGiveawayListings,
+  getMockWantedListings,
+  getMockClassifiedListings,
+  getMockBusinessesDto,
+} from "@/lib/api/fallback-marketplace";
+import { Plus } from "lucide-react";
+
+type HubTab = "buy-sell" | "classifieds" | "services" | "jobs" | "businesses";
 
 function CreateListingModal({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -77,39 +97,21 @@ function CreateListingModal({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-function JobCard({ job, onSelect }: { job: JobListingDto; onSelect: () => void }) {
-  return (
-    <article
-      onClick={onSelect}
-      className="cursor-pointer rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition-shadow hover:shadow-md"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <Badge variant="accent">{job.jobType.replace("_", " ")}</Badge>
-        {job.remote && <Badge>Remote</Badge>}
-      </div>
-      <h3 className="mt-2 font-semibold">{job.title}</h3>
-      {job.description && (
-        <p className="mt-1 text-sm text-[var(--muted-foreground)] line-clamp-2">{job.description}</p>
-      )}
-      <p className="mt-2 text-sm font-medium">
-        {job.salaryMin != null
-          ? `$${job.salaryMin}${job.salaryMax ? `–$${job.salaryMax}` : ""}${job.salaryUnit ? `/${job.salaryUnit}` : ""}`
-          : "Compensation TBD"}
-      </p>
-      <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-        {job.location ?? "Local"} · {job.poster.displayName}
-      </p>
-    </article>
-  );
-}
-
 export default function MarketplacePage() {
-  const [tab, setTab] = useState<"listings" | "jobs">("listings");
+  const [hubTab, setHubTab] = useState<HubTab>("buy-sell");
   const [category, setCategory] = useState("all");
+  const [classifiedFilter, setClassifiedFilter] = useState("all");
   const [jobType, setJobType] = useState("all");
   const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("Oak Hills");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selected, setSelected] = useState<MarketplaceListingDto | null>(null);
   const [selectedJob, setSelectedJob] = useState<JobListingDto | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessDto | null>(null);
+  const [reviews, setReviews] = useState<ReviewDto[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  const apiCategory = category === "all" ? undefined : "BUY_SELL";
 
   const {
     listings,
@@ -121,17 +123,40 @@ export default function MarketplacePage() {
     source,
     toggleFavorite,
     refresh,
-  } = useMarketplace({ category, search: search || undefined });
+  } = useMarketplace({ category: apiCategory, search: search || undefined });
 
   const { jobs, loading: jobsLoading, source: jobsSource, refresh: refreshJobs } = useJobs({
     jobType,
     search: search || undefined,
   });
 
+  const {
+    businesses,
+    loading: bizLoading,
+    source: bizSource,
+    toggleFavorite: toggleBizFavorite,
+  } = useBusinesses({ search: search || undefined });
+
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  const recentListings = useMemo(() => getMockRecentListings().slice(0, 6), []);
+  const nearbyListings = useMemo(() => getMockNearbyListings(), []);
+  const trendingListings = useMemo(() => getMockTrendingListings(), []);
+  const giveawayListings = useMemo(() => getMockGiveawayListings(), []);
+  const wantedListings = useMemo(() => getMockWantedListings(), []);
+  const classifiedListings = useMemo(() => getMockClassifiedListings(), []);
+
+  const displayBusinesses = businesses.length > 0 ? businesses : getMockBusinessesDto();
+  const displayFeatured = featured.length > 0 ? featured : getMockTrendingListings().filter((l) => l.featured);
+  const displayListings =
+    listings.length > 0
+      ? listings
+      : source === "mock"
+        ? getMockMarketplaceFiltered(category, search)
+        : listings;
+
   useEffect(() => {
-    if (tab !== "listings") return;
+    if (hubTab !== "buy-sell") return;
     const el = sentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -142,101 +167,152 @@ export default function MarketplacePage() {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [loadMore, tab]);
+  }, [loadMore, hubTab]);
+
+  async function openBusiness(business: BusinessDto) {
+    setSelectedBusiness(business);
+    setReviewsLoading(true);
+    try {
+      const res = await fetchBusinessReviews(business.id);
+      setReviews(res.items);
+    } catch {
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }
+
+  const showHubSections = hubTab === "buy-sell" && !search && category === "all";
 
   return (
     <PageTransition>
       <PageHeader
         title="Marketplace"
-        description="Buy, sell, trade, services, and local jobs"
+        description="Buy, sell, classifieds, services, jobs, and local businesses"
         action={<CreateListingModal onCreated={refresh} />}
       />
 
-      <PageHeroBanner
-        src={communityPhotos.hero.marketplace}
-        alt="Patio furniture for sale in the neighborhood marketplace"
-        title="Neighborhood marketplace"
-        description="Buy, sell, trade, and find local gigs"
-      />
-
-      {(source === "mock" || jobsSource === "mock") && (
+      {(source === "mock" || jobsSource === "mock" || bizSource === "mock") && (
         <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
           Demo data — database offline. Run migrations and seed for live data.
         </p>
       )}
 
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-        <Input
-          placeholder="Search listings and jobs..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      <MarketplaceSearchHero
+        search={search}
+        onSearchChange={setSearch}
+        location={location}
+        onLocationChange={setLocation}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        sticky
+      />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "listings" | "jobs")} className="mb-4">
-        <TabsList>
-          <TabsTrigger value="listings">Listings</TabsTrigger>
-          <TabsTrigger value="jobs">
-            <span className="flex items-center gap-1">
-              <Briefcase className="h-3.5 w-3.5" />
-              Jobs
-            </span>
-          </TabsTrigger>
+      <Tabs
+        value={hubTab}
+        onValueChange={(v) => setHubTab(v as HubTab)}
+        className="mb-6"
+      >
+        <TabsList className="flex w-full flex-wrap h-auto gap-1">
+          <TabsTrigger value="buy-sell">Buy/Sell</TabsTrigger>
+          <TabsTrigger value="classifieds">Classifieds</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+          <TabsTrigger value="businesses">Businesses</TabsTrigger>
         </TabsList>
       </Tabs>
 
-      {tab === "listings" && (
+      {hubTab === "buy-sell" && (
         <>
-          {featured.length > 0 && !search && category === "all" && (
-            <section className="mb-6">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                Featured
-              </h2>
-              <div className="flex gap-4 overflow-x-auto pb-2 snap-x md:grid md:grid-cols-3 md:overflow-visible">
-                {featured.map((listing) => (
-                  <div key={listing.id} className="min-w-[260px] snap-start md:min-w-0">
-                    <MarketplaceListingCard
-                      listing={listing}
-                      onSelect={() => setSelected(listing)}
-                      onToggleFavorite={toggleFavorite}
-                      compact
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          <CategoryChips value={category} onChange={setCategory} className="mb-6" />
 
-          <FilterChips
-            options={marketplaceCategories.map((c) => ({ id: c.id, label: c.label }))}
-            value={category}
-            onChange={setCategory}
-            className="mb-6"
-          />
+          {showHubSections && (
+            <>
+              <FeaturedRow
+                listings={displayFeatured}
+                onSelect={setSelected}
+                onToggleFavorite={toggleFavorite}
+                title="Featured Listings"
+              />
 
-          {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Skeleton className="h-64" />
-              <Skeleton className="h-64" />
-              <Skeleton className="h-64" />
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {listings.map((listing) => (
-                <MarketplaceListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onSelect={() => setSelected(listing)}
+              <FeaturedRow
+                listings={recentListings}
+                onSelect={setSelected}
+                onToggleFavorite={toggleFavorite}
+                title="Recently Posted"
+              />
+
+              <FeaturedRow
+                listings={nearbyListings}
+                onSelect={setSelected}
+                onToggleFavorite={toggleFavorite}
+                title="Nearby Listings"
+              />
+
+              <FeaturedRow
+                listings={trendingListings}
+                onSelect={setSelected}
+                onToggleFavorite={toggleFavorite}
+                title="Trending Listings"
+              />
+
+              <DealsSection deals={mockDeals} />
+
+              <BusinessesRow
+                businesses={displayBusinesses}
+                onSelect={openBusiness}
+                onToggleFavorite={toggleBizFavorite}
+              />
+
+              <ServicesRow
+                businesses={displayBusinesses}
+                onSelect={openBusiness}
+                onToggleFavorite={toggleBizFavorite}
+              />
+
+              <JobsSection
+                jobs={jobs}
+                loading={jobsLoading}
+                jobType={jobType}
+                onJobTypeChange={setJobType}
+                onSelect={setSelectedJob}
+                compact
+              />
+
+              {giveawayListings.length > 0 && (
+                <FeaturedRow
+                  listings={giveawayListings}
+                  onSelect={setSelected}
                   onToggleFavorite={toggleFavorite}
+                  title="Community Giveaways"
                 />
-              ))}
-            </div>
+              )}
+
+              {wantedListings.length > 0 && (
+                <FeaturedRow
+                  listings={wantedListings}
+                  onSelect={setSelected}
+                  onToggleFavorite={toggleFavorite}
+                  title="Wanted Requests"
+                />
+              )}
+            </>
           )}
 
-          {listings.length === 0 && !loading && (
-            <p className="py-12 text-center text-[var(--muted-foreground)]">No listings found</p>
+          {viewMode === "grid" ? (
+            <ListingGrid
+              listings={displayListings}
+              loading={loading}
+              onSelect={setSelected}
+              onToggleFavorite={toggleFavorite}
+            />
+          ) : (
+            <ListingList
+              listings={displayListings}
+              loading={loading}
+              onSelect={setSelected}
+              onToggleFavorite={toggleFavorite}
+            />
           )}
 
           <div ref={sentinelRef} className="h-4" />
@@ -244,57 +320,84 @@ export default function MarketplacePage() {
         </>
       )}
 
-      {tab === "jobs" && (
+      {hubTab === "classifieds" && (
+        <ClassifiedsSection
+          listings={classifiedListings.length > 0 ? classifiedListings : displayListings}
+          filter={classifiedFilter}
+          onFilterChange={setClassifiedFilter}
+          onSelect={setSelected}
+          onToggleFavorite={toggleFavorite}
+        />
+      )}
+
+      {hubTab === "services" && (
         <>
-          <FilterChips
-            options={jobTypes.map((j) => ({ id: j.id, label: j.label }))}
-            value={jobType}
-            onChange={setJobType}
-            className="mb-6"
+          <ServicesRow
+            businesses={displayBusinesses}
+            onSelect={openBusiness}
+            onToggleFavorite={toggleBizFavorite}
           />
-          {jobsLoading ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
+          {bizLoading ? (
+            <Skeleton className="h-64" />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {jobs.map((job) => (
-                <JobCard key={job.id} job={job} onSelect={() => setSelectedJob(job)} />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {displayBusinesses.map((b) => (
+                <BusinessCard
+                  key={b.id}
+                  business={b}
+                  onSelect={() => openBusiness(b)}
+                  onToggleFavorite={toggleBizFavorite}
+                />
               ))}
             </div>
           )}
-          {jobs.length === 0 && !jobsLoading && (
-            <p className="py-12 text-center text-[var(--muted-foreground)]">No jobs posted yet</p>
+          <div className="mt-6 rounded-xl border border-[var(--border)] p-4">
+            <h3 className="font-semibold">Request a Quote</h3>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Compare providers and request quotes from verified local businesses.
+            </p>
+            <Link href="/services" className="mt-3 inline-block text-sm text-[var(--accent)] hover:underline">
+              Open full services directory →
+            </Link>
+          </div>
+        </>
+      )}
+
+      {hubTab === "jobs" && (
+        <JobsSection
+          jobs={jobs}
+          loading={jobsLoading}
+          jobType={jobType}
+          onJobTypeChange={setJobType}
+          onSelect={setSelectedJob}
+        />
+      )}
+
+      {hubTab === "businesses" && (
+        <>
+          <BusinessesRow
+            businesses={displayBusinesses}
+            onSelect={openBusiness}
+            onToggleFavorite={toggleBizFavorite}
+          />
+          {bizLoading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {displayBusinesses.map((b) => (
+                <BusinessCard
+                  key={b.id}
+                  business={b}
+                  onSelect={() => openBusiness(b)}
+                  onToggleFavorite={toggleBizFavorite}
+                />
+              ))}
+            </div>
           )}
         </>
       )}
 
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.title}>
-        {selected && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Badge variant="accent">{selected.category}</Badge>
-              {selected.price != null && (
-                <span className="text-xl font-semibold">${selected.price}</span>
-              )}
-            </div>
-            <p className="text-sm leading-relaxed">{selected.description}</p>
-            <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-              <MapPin className="h-4 w-4" />
-              {selected.locationLabel ?? "Local"}
-            </div>
-            <p className="text-sm">
-              Listed by <strong>{selected.seller.displayName}</strong> ·{" "}
-              <RelativeTime date={selected.createdAt} />
-            </p>
-            <InquiryForm listingId={selected.id} />
-            <Link href="/map" className="text-sm text-[var(--accent)] hover:underline">
-              View on map
-            </Link>
-          </div>
-        )}
-      </Modal>
+      <ListingDetailModal listing={selected} onClose={() => setSelected(null)} />
 
       <Modal open={!!selectedJob} onClose={() => setSelectedJob(null)} title={selectedJob?.title}>
         {selectedJob && (
@@ -304,6 +407,40 @@ export default function MarketplacePage() {
           </div>
         )}
       </Modal>
+
+      <Modal
+        open={!!selectedBusiness}
+        onClose={() => setSelectedBusiness(null)}
+        title={selectedBusiness?.name}
+      >
+        {selectedBusiness && (
+          <div className="space-y-4">
+            <BusinessCard business={selectedBusiness} />
+            <InquiryForm businessId={selectedBusiness.id} quoteRequest />
+            {reviewsLoading ? (
+              <Skeleton className="h-24" />
+            ) : (
+              <ReviewSection reviews={reviews} businessId={selectedBusiness.id} />
+            )}
+          </div>
+        )}
+      </Modal>
     </PageTransition>
   );
+}
+
+function getMockMarketplaceFiltered(category: string, search: string) {
+  let items = getMockRecentListings();
+  if (category !== "all") {
+    items = items.filter((l) => l.subCategory === category);
+  }
+  if (search) {
+    const q = search.toLowerCase();
+    items = items.filter(
+      (l) =>
+        l.title.toLowerCase().includes(q) ||
+        (l.description?.toLowerCase().includes(q) ?? false)
+    );
+  }
+  return items;
 }

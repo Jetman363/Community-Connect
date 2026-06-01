@@ -15,6 +15,10 @@ export interface SellerSummary {
   id: string;
   displayName: string;
   avatarUrl?: string | null;
+  verified?: boolean;
+  reputationScore?: number;
+  totalSales?: number;
+  memberSince?: string;
 }
 
 export interface MarketplaceListingDto {
@@ -41,6 +45,9 @@ export interface MarketplaceListingDto {
   updatedAt: string;
   seller: SellerSummary;
   favorited?: boolean;
+  subCategory?: string | null;
+  condition?: string | null;
+  classifiedType?: string | null;
 }
 
 export interface BusinessDto {

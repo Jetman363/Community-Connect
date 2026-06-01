@@ -5,6 +5,7 @@ import { mockGroups } from "./groups";
 import { mockEvents } from "./events";
 import { mockNewsArticles } from "./news";
 import { mockChallenges } from "./challenges";
+import { mockListings } from "./marketplace";
 
 export const mockDiscoverFeed: DiscoverFeedItem[] = [
   {
@@ -24,6 +25,24 @@ export const mockDiscoverFeed: DiscoverFeedItem[] = [
     imageUrl: mockDeals[0].imageUrl ?? undefined,
     score: 92,
     href: "/deals",
+  },
+  {
+    id: "df-mp1",
+    type: "marketplace",
+    title: "Popular Listing Near You",
+    subtitle: `${mockListings.find((l) => l.id === "m10")?.title ?? "DeWalt Power Tool Set"} · $275`,
+    imageUrl: mockListings.find((l) => l.id === "m10")?.imageUrl ?? communityPhotos.marketplace.patio,
+    score: 90,
+    href: "/marketplace",
+  },
+  {
+    id: "df-mp2",
+    type: "marketplace",
+    title: "Trending Garage Sale",
+    subtitle: mockListings.find((l) => l.id === "m7")?.title ?? "Community Garage Sale",
+    imageUrl: mockListings.find((l) => l.id === "m7")?.imageUrl,
+    score: 89,
+    href: "/marketplace?tab=classifieds",
   },
   {
     id: "df3",

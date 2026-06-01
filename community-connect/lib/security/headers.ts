@@ -6,10 +6,13 @@ export function buildSecurityHeaders(opts: SecurityHeaderOptions = {}): Record<s
   const nonce = opts.nonce ?? "";
   const isProduction =
     process.env.NODE_ENV === "production" || process.env.APP_ENV === "production";
+  // React dev tooling (Fast Refresh, component stacks) needs eval(); NODE_ENV alone
+  // determines runtime mode — APP_ENV may be "production" locally for prod-like testing.
+  const allowUnsafeEval = process.env.NODE_ENV !== "production";
   const scriptSrc = [
     "'self'",
     "'unsafe-inline'",
-    ...(isProduction ? [] : ["'unsafe-eval'"]),
+    ...(allowUnsafeEval ? ["'unsafe-eval'"] : []),
     ...(nonce ? [`'nonce-${nonce}'`] : []),
     "https://maps.googleapis.com",
   ].join(" ");

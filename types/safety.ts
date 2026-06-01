@@ -49,7 +49,7 @@ export interface IncidentReportDto {
 
 export interface MapMarkerDto {
   id: string;
-  type: "alert" | "report" | "event" | "business";
+  type: "alert" | "report" | "event" | "business" | "listing" | "job";
   title: string;
   lat: number;
   lng: number;

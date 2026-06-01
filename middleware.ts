@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { AUTH_COOKIE } from "@/lib/auth";
 import { verifyTokenEdge } from "@/lib/auth/jwt-edge";
 import { adminRoutes, protectedRoutes } from "@/config/routes";
+import { hasMinRole } from "@/lib/permissions/rbac";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -27,7 +28,11 @@ export async function middleware(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
   if (isAdminRoute) {
-    if (payload.role !== "ADMIN" && payload.role !== "MODERATOR") {
+    const opsOnly = pathname.startsWith("/admin/ops");
+    const allowed = opsOnly
+      ? hasMinRole(payload.role, "PUBLIC_SAFETY")
+      : hasMinRole(payload.role, "MODERATOR");
+    if (!allowed) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

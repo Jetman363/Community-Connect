@@ -36,6 +36,7 @@ export const sidebarNav: NavItem[] = [
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/assistant", label: "AI Assistant", icon: Bot },
   { href: "/admin", label: "Admin", icon: Shield, adminOnly: true },
+  { href: "/admin/ops", label: "Ops", icon: Map, adminOnly: true },
 ];
 
 export const mobileNav: NavItem[] = [

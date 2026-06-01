@@ -119,3 +119,153 @@ export async function uploadFile(file: File, entityType = "post") {
   const res = await fetch("/api/upload", { method: "POST", body: form, credentials: "include" });
   return parseResponse<{ id: string; url: string; mimeType: string }>(res);
 }
+
+// ─── Marketplace ─────────────────────────────────────────────────────────────
+
+import type {
+  MarketplaceListingDto,
+  BusinessDto,
+  JobListingDto,
+  ReviewDto,
+  SearchRecommendationsDto,
+  ServiceDto,
+  BusinessAnalyticsDto,
+} from "@/types/marketplace";
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  nextCursor: string | null;
+  hasMore: boolean;
+  source?: string;
+}
+
+export async function fetchListings(params: {
+  category?: string;
+  search?: string;
+  featured?: boolean;
+  cursor?: string;
+}): Promise<PaginatedResponse<MarketplaceListingDto>> {
+  const qs = new URLSearchParams();
+  if (params.category && params.category !== "all") qs.set("category", params.category);
+  if (params.search) qs.set("search", params.search);
+  if (params.featured) qs.set("featured", "true");
+  if (params.cursor) qs.set("cursor", params.cursor);
+  return apiFetch(`/api/marketplace?${qs}`);
+}
+
+export async function fetchListing(id: string): Promise<MarketplaceListingDto> {
+  return apiFetch(`/api/marketplace/${id}`);
+}
+
+export async function createListing(body: Record<string, unknown>): Promise<MarketplaceListingDto> {
+  return apiFetch("/api/marketplace", { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function toggleListingFavorite(id: string, favorited: boolean) {
+  return apiFetch(`/api/marketplace/${id}/favorite`, {
+    method: favorited ? "DELETE" : "POST",
+  });
+}
+
+export async function sendListingInquiry(listingId: string, message: string) {
+  return apiFetch("/api/inquiries", {
+    method: "POST",
+    body: JSON.stringify({ listingId, message }),
+  });
+}
+
+// ─── Businesses ──────────────────────────────────────────────────────────────
+
+export async function fetchBusinesses(params: {
+  category?: string;
+  search?: string;
+  verified?: boolean;
+  cursor?: string;
+}): Promise<PaginatedResponse<BusinessDto>> {
+  const qs = new URLSearchParams();
+  if (params.category && params.category !== "all") qs.set("category", params.category);
+  if (params.search) qs.set("search", params.search);
+  if (params.verified) qs.set("verified", "true");
+  if (params.cursor) qs.set("cursor", params.cursor);
+  return apiFetch(`/api/businesses?${qs}`);
+}
+
+export async function fetchBusiness(
+  id: string
+): Promise<BusinessDto & { services?: ServiceDto[] }> {
+  return apiFetch(`/api/businesses/${id}`);
+}
+
+export async function fetchBusinessReviews(businessId: string): Promise<{ items: ReviewDto[] }> {
+  return apiFetch(`/api/businesses/${businessId}/reviews`);
+}
+
+export async function createReview(body: {
+  businessId: string;
+  rating: number;
+  comment?: string;
+  categoryRatings?: Record<string, number>;
+}): Promise<ReviewDto> {
+  return apiFetch("/api/reviews", { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function sendBusinessInquiry(businessId: string, message: string, quoteRequest = false) {
+  return apiFetch(`/api/businesses/${businessId}/inquiry`, {
+    method: "POST",
+    body: JSON.stringify({ message, quoteRequest }),
+  });
+}
+
+export async function toggleBusinessFavorite(id: string, favorited: boolean) {
+  return apiFetch(`/api/businesses/${id}/favorite`, {
+    method: favorited ? "DELETE" : "POST",
+  });
+}
+
+export async function fetchBusinessAnalytics(businessId: string): Promise<BusinessAnalyticsDto> {
+  return apiFetch(`/api/businesses/${businessId}/analytics`);
+}
+
+// ─── Jobs ────────────────────────────────────────────────────────────────────
+
+export async function fetchJobs(params: {
+  jobType?: string;
+  search?: string;
+  cursor?: string;
+}): Promise<PaginatedResponse<JobListingDto>> {
+  const qs = new URLSearchParams();
+  if (params.jobType && params.jobType !== "all") qs.set("jobType", params.jobType);
+  if (params.search) qs.set("search", params.search);
+  if (params.cursor) qs.set("cursor", params.cursor);
+  return apiFetch(`/api/jobs?${qs}`);
+}
+
+export async function applyToJob(jobId: string, message: string) {
+  return apiFetch(`/api/jobs/${jobId}/apply`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+}
+
+// ─── Search & Discover ───────────────────────────────────────────────────────
+
+export async function discoverSearch(params: {
+  q?: string;
+  category?: string;
+  verified?: boolean;
+}) {
+  const qs = new URLSearchParams();
+  if (params.q) qs.set("q", params.q);
+  if (params.category) qs.set("category", params.category);
+  if (params.verified) qs.set("verified", "true");
+  return apiFetch<{
+    listings: MarketplaceListingDto[];
+    businesses: BusinessDto[];
+    jobs: JobListingDto[];
+    source?: string;
+  }>(`/api/search/discover?${qs}`);
+}
+
+export async function fetchRecommendations(): Promise<SearchRecommendationsDto & { source?: string }> {
+  return apiFetch("/api/recommendations");
+}

@@ -4,10 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { BusinessCard } from "@/components/cards/business-card";
-import { mockBusinesses } from "@/lib/mock-data";
+import { getMockBusinessesDto } from "@/lib/api/fallback-marketplace";
 
 export function NearbyServices() {
-  const businesses = mockBusinesses.slice(0, 3);
+  const businesses = getMockBusinessesDto().slice(0, 3);
 
   return (
     <section>

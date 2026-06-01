@@ -12,12 +12,14 @@ export const protectedRoutes = [
   "/report",
   "/hoa",
   "/services",
+  "/search",
+  "/businesses",
   "/messages",
   "/settings",
 ] as const;
 
 /** Routes restricted to admin/moderator roles. */
-export const adminRoutes = ["/admin"] as const;
+export const adminRoutes = ["/admin", "/admin/ops"] as const;
 
 export const authRoutes = ["/login", "/register"] as const;
 

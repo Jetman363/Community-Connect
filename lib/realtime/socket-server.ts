@@ -46,6 +46,14 @@ export function initSocketServer(httpServer: HttpServer): Server {
     socket.on("join:geofence", (id: string) => {
       if (typeof id === "string") socket.join(`geofence:${id}`);
     });
+
+    socket.on("join:admin", (id: string) => {
+      if (typeof id === "string") socket.join(`admin:${id}`);
+    });
+
+    socket.on("join:ops", (id: string) => {
+      if (typeof id === "string") socket.join(`ops:${id}`);
+    });
   });
 
   if (process.env.NODE_ENV === "development") {

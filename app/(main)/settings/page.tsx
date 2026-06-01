@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PageTransition, PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -176,6 +177,12 @@ export default function SettingsPage() {
 
         <SettingsSection icon={Shield} title="Privacy & Data" description="Export or delete your account data">
           <div className="space-y-4">
+            <Link
+              href="/settings/privacy"
+              className="flex w-full items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-medium hover:bg-[var(--muted)]"
+            >
+              Privacy & location settings →
+            </Link>
             <Button variant="outline" className="w-full justify-start" onClick={() => void exportData()}>
               <Download className="mr-2 h-4 w-4" />
               Download my data (GDPR export)
